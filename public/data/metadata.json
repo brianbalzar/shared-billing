@@ -1,0 +1,16 @@
+{
+  "generated": "2026-10-02T18:07:43.478Z",
+  "source": "IMDb non-commercial datasets",
+  "minVotes": {
+    "hit": 100000,
+    "popular": 10000,
+    "all": 1000
+  },
+  "actors": 183515,
+  "films": 46944,
+  "counts": {
+    "hit": 2747,
+    "popular": 12368,
+    "all": 46944
+  }
+}

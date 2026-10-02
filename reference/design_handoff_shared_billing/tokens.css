@@ -1,0 +1,144 @@
+/* Shared Billing — semantic tokens (final). Names describe meaning, never hue. */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap");
+
+:root, [data-theme="light"] {
+  /* Direct shared credit, chosen actor, selected direct link, primary action. Nothing else. */
+  --color-direct: #FF5A36;
+  --color-direct-text: #9A2A10;      /* initials, direct link labels */
+  --color-direct-surface: #FFE3D9;   /* chosen bubble fill, selected-link halo */
+  --color-on-direct: #1A1410;        /* text on --color-direct fills (buttons) */
+
+  /* The selected indirect route only. Strokes and rings, never large fills. */
+  --color-route: #B08A3E;
+  --color-route-text: #6B4E14;
+  --color-route-surface: #F3E6C8;
+
+  /* Co-stars, indirect links, overflow */
+  --color-bridge: #A08A74;           /* indirect link stroke, dashed add/overflow lines */
+  --color-bridge-surface: #EFE3D3;   /* bridge + hub bubble fill, poster fallback */
+  --color-bridge-text: #4F3F33;      /* bridge initials */
+
+  /* Surfaces */
+  --color-canvas: #FFF8EE;
+  --color-panel: #FFFFFF;            /* top bar, side panel, cards, popovers, fields */
+  --color-muted: #F6ECDD;            /* hover / active rows */
+
+  /* Text */
+  --color-text-primary: #1A1410;     /* also focus ring, active input border, open overflow */
+  --color-text-secondary: #2B211A;
+  --color-text-muted: #7A6553;
+  --color-text-disabled: #A08A74;
+
+  /* Lines */
+  --color-border: #EFE3D3;           /* hairlines, ordinary controls */
+  --color-border-strong: #DCCBB5;    /* resting overflow pill only */
+  --color-border-active: #1A1410;    /* active/focused inputs, important panels */
+
+  /* Shadows */
+  --shadow-selected: 5px 5px 0 #1A1410;   /* chosen actors */
+  --shadow-panel: 6px 6px 0 #1A1410;      /* important panels: example card, no-connection */
+  --shadow-popover: 0 8px 24px rgba(26,20,16,.10); /* typeahead, settings */
+}
+
+[data-theme="dark"] {
+  --color-direct: #FF7A5C;
+  --color-direct-text: #FFD3C4;
+  --color-direct-surface: #5A1F10;
+  --color-on-direct: #120E0C;
+  --color-route: #C9A35A;
+  --color-route-text: #E6CC94;
+  --color-route-surface: #3B301D;
+  --color-bridge: #7A6553;
+  --color-bridge-surface: #33281F;
+  --color-bridge-text: #DCCBB5;
+  --color-canvas: #1B1512;
+  --color-panel: #120E0C;
+  --color-muted: #261E19;
+  --color-text-primary: #FFF8EE;
+  --color-text-secondary: #EFE3D3;
+  --color-text-muted: #B3A08B;
+  --color-text-disabled: #8A7561;
+  --color-border: #33281F;
+  --color-border-strong: #4F3F33;
+  --color-border-active: #FFF8EE;
+  --shadow-selected: 5px 5px 0 #5A1F10;
+  --shadow-panel: 6px 6px 0 #000000;
+  --shadow-popover: 0 8px 24px rgba(0,0,0,.5);
+}
+
+:root {
+  /* Type */
+  --font-display: "Bricolage Grotesque", sans-serif;  /* wordmark, major headings, actor names */
+  --font-ui: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; /* everything else */
+  --text-hero: 800 44px/1.1 var(--font-display);
+  --text-panel-title: 800 28px/1.15 var(--font-display);
+  --text-wordmark: 800 20px/1 var(--font-display);
+  --text-name-chosen: 700 16px/1.2 var(--font-display);
+  --text-name-result: 700 16px/1.2 var(--font-display);
+  --text-name-bridge: 600 13px/1.2 var(--font-display);  /* 700 on selected route */
+  --text-name-hub: 700 14px/1.2 var(--font-display);
+  --text-body: 400 16px/1.55 var(--font-ui);
+  --text-ui: 500 13px/1.4 var(--font-ui);
+  --text-meta: 400 13px/1.4 var(--font-ui);
+  --text-label-direct: 600 12px/1 var(--font-ui);
+  --text-label-indirect: 500 11px/1 var(--font-ui);
+  --text-attribution: 400 11px/1.5 var(--font-ui);
+  --tracking-display: -0.02em;
+
+  /* Spacing */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  /* Radius */
+  --radius-field: 8px;
+  --radius-card: 12px;
+  --radius-poster: 4px;
+  --radius-pill: 999px;    /* buttons, link labels, overflow */
+
+  /* Layout */
+  --size-topbar: 64px;
+  --size-panel: 440px;
+
+  /* Nodes (diameter) */
+  --size-node-chosen: 112px;
+  --size-node-add: 112px;    /* 2px dashed --color-text-disabled */
+  --size-node-hub: 72px;     /* ring: 4px canvas gap + 2px --color-text-muted */
+  --size-node-bridge: 56px;
+  --size-overflow-height: 32px;
+  --border-node-chosen: 3px;
+  --size-remove-control: 26px;
+
+  /* Rings */
+  --ring-focus: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-border-active);
+  --ring-hub: 0 0 0 4px var(--color-canvas), 0 0 0 6px var(--color-text-muted);
+  --ring-route: 0 0 0 3px var(--color-canvas), 0 0 0 6px var(--color-route);
+
+  /* Link stroke by shared-film count */
+  --stroke-1: 1.5px;
+  --stroke-2: 3px;
+  --stroke-3: 4.5px;
+  --stroke-4: 6px;          /* 4–5 films */
+  --stroke-6: 8px;          /* 6+ films */
+  --stroke-route-extra: 1.5px;  /* selected route = count stroke + this */
+  --stroke-halo-extra: 10px;    /* selected direct link halo = stroke + this, --color-direct-surface */
+  --stroke-overflow: 1px;       /* dashed 4 4 */
+  --opacity-dimmed: 0.3;        /* unrelated links/nodes while a route is selected */
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-select: 150ms;
+  --dur-bridge-in: 280ms;       /* fade + scale .85→1, stagger 40ms */
+  --dur-link-draw: 400ms;
+  --dur-settle-max: 600ms;      /* layout freezes after this */
+
+  /* Limits */
+  --limit-actors-min: 2;
+  --limit-actors-max: 6;
+  --limit-bridges-per-pair: 5;
+  --limit-people-between: 3;
+}

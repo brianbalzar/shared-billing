@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4E6D2;font-family:Figtree,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1A1410;text-decoration:underline;text-decoration-color:#DCCBB5;text-underline-offset:3px}
+a:hover{color:#E0401F;text-decoration-color:#E0401F}
+</style>
+</helmet>
+<div style="padding:96px;display:flex;flex-direction:column;gap:96px;width:max-content">
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Co-star finder · Desktop frames · Light and dark · Final</div>
+    <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:72px;font-weight:800;line-height:1.05;letter-spacing:-0.03em;color:#1A1410">Shared Billing</div>
+    <div style="font-size:18px;line-height:1.6;color:#2B211A;max-width:70ch;text-wrap:pretty">Final direction. Coral means a direct shared credit, a chosen actor, a selected direct link, or the primary action. Gold marks the selected indirect route. Sepia covers co-stars, indirect links, and secondary UI. Semantic tokens are in <a href="tokens.css">tokens.css</a>; component and interaction rules are in <a href="BUILD.md">BUILD.md</a>.</div>
+  </div>
+
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+    <section data-screen-label="{{ g.num }} {{ g.title }}" style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;align-items:baseline;gap:20px;max-width:1200px">
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:40px;font-weight:800;color:#1A1410;min-width:64px">{{ g.num }}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800;color:#1A1410;letter-spacing:-0.03em">{{ g.title }}</div>
+          <div style="font-size:16px;line-height:1.5;color:#4F3F33;max-width:80ch;text-wrap:pretty">{{ g.note }}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:48px">
+        <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">{{ f.label }}</div>
+            <div style="position:relative;width:1440px;height:900px;overflow:hidden;background:{{ f.t.canvas }};font-family:Figtree,sans-serif;box-shadow:0 1px 0 rgba(0,0,0,.08)">
+
+              <div style="position:absolute;left:0;top:0;right:0;height:64px;display:flex;align-items:center;gap:24px;padding:0 24px;background:{{ f.t.chrome }};border-bottom:1px solid {{ f.t.border }};box-sizing:border-box;z-index:3">
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;line-height:1;color:{{ f.t.fg1 }};letter-spacing:-0.03em">Shared Billing</div>
+                  <div style="font-size:12px;color:{{ f.t.fg3 }}">Find the actors who connect any two stars.</div>
+                </div>
+                <sc-if value="{{ f.hasSearch }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;align-items:center;gap:8px;width:280px;height:36px;padding:0 12px;box-sizing:border-box;border:1px solid {{ f.t.border }};background:{{ f.t.field }};border-radius:8px;margin-left:16px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:{{ f.t.fg3 }}"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                    <div style="flex:1;font-size:14px;color:{{ f.t.fg3 }}">Add an actor</div>
+                    <div style="font-size:12px;color:{{ f.t.fg3 }}">{{ f.countText }}</div>
+                  </div>
+                </sc-if>
+                <div style="flex:1"></div>
+                <div style="display:flex;align-items:center;gap:16px;opacity:{{ f.sliderOp }}">
+                  <div style="font-size:13px;font-weight:500;color:{{ f.t.fg2 }}">People in between</div>
+                  <div style="position:relative;width:144px;height:32px">
+                    <div style="position:absolute;left:0;right:0;top:7px;height:2px;background:{{ f.t.border }}"></div>
+                    <div style="position:absolute;left:0;top:7px;height:2px;width:{{ f.sliderFill }}px;background:{{ f.t.fg2 }}"></div>
+                    <div style="position:absolute;top:0;left:{{ f.knob }}px;width:16px;height:16px;border-radius:50%;box-sizing:border-box;background:{{ f.t.chrome }};border:2px solid {{ f.t.fg1 }}"></div>
+                    <sc-for list="{{ f.stops }}" as="s" hint-placeholder-count="4">
+                      <div style="position:absolute;top:20px;left:{{ s.left }}px;width:16px;margin-left:-8px;text-align:center;font-size:11px;font-weight:{{ s.fw }};color:{{ s.c }}">{{ s.n }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;color:{{ f.t.fg2 }};font-size:13px;font-weight:500">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>
+                  <div>Popular films</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 4px;color:{{ f.resetColor }};font-size:13px;font-weight:500">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                  <div>Reset layout</div>
+                </div>
+              </div>
+
+              <sc-if value="{{ f.summary }}">
+                <div style="position:absolute;left:24px;top:88px;font-size:13px;color:{{ f.t.fg3 }};z-index:2">{{ f.summary }}</div>
+              </sc-if>
+
+              <sc-for list="{{ f.links }}" as="l" hint-placeholder-count="0">
+                <svg width="1440" height="900" style="position:absolute;left:0;top:0;pointer-events:none;opacity:{{ l.op }}">
+                  <path d="{{ l.d }}" fill="none" stroke="{{ l.haloC }}" stroke-width="{{ l.haloW }}" stroke-linecap="round" opacity="{{ l.haloOp }}"></path>
+                  <path d="{{ l.d }}" fill="none" stroke="{{ l.c }}" stroke-width="{{ l.w }}" stroke-linecap="round" stroke-dasharray="{{ l.dash }}"></path>
+                </svg>
+              </sc-for>
+              <sc-for list="{{ f.labels }}" as="lb" hint-placeholder-count="0">
+                <div style="position:absolute;left:{{ lb.x }}px;top:{{ lb.y }}px;transform:translate(-50%,-50%);padding:2px 8px;background:{{ lb.bg }};border:1px solid {{ lb.bd }};border-radius:999px;font-size:{{ lb.fs }}px;font-weight:{{ lb.fw }};color:{{ lb.c }};white-space:nowrap;opacity:{{ lb.op }}">{{ lb.text }}</div>
+              </sc-for>
+
+              <sc-for list="{{ f.nodes }}" as="n" hint-placeholder-count="0">
+                <div style="position:absolute;left:{{ n.left }}px;top:{{ n.top }}px;width:{{ n.w }}px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:{{ n.op }}">
+                  <sc-if value="{{ n.isBubble }}">
+                    <div style="position:relative;width:{{ n.size }}px;height:{{ n.size }}px;border-radius:50%;box-sizing:border-box;background:{{ n.bg }};border:{{ n.border }};box-shadow:{{ n.ring }};display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:{{ n.fs }}px;font-weight:800;color:{{ n.ink }}">
+                      <div>{{ n.initials }}</div>
+                      <sc-if value="{{ n.isAdd }}">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:{{ f.t.fg3 }}"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                      </sc-if>
+                      <sc-if value="{{ n.isChosen }}">
+                        <div style="position:absolute;top:2px;right:2px;width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:{{ f.t.panel }};border:1px solid {{ f.t.border }};display:flex;align-items:center;justify-content:center;color:{{ f.t.fg2 }}">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path></svg>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ n.pinned }}">
+                        <div style="position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:{{ f.t.fg1 }};display:flex;align-items:center;justify-content:center;color:{{ f.t.canvas }}">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"></path><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path></svg>
+                        </div>
+                      </sc-if>
+                    </div>
+                    <sc-if value="{{ n.name }}">
+                      <div style="font-family:{{ n.lf }};font-size:{{ n.ls }}px;font-weight:{{ n.lw }};color:{{ n.lc }};text-align:center;line-height:1.2;letter-spacing:-0.01em;padding:1px 6px;background:{{ f.t.canvas }}">{{ n.name }}</div>
+                    </sc-if>
+                    <sc-if value="{{ n.sub }}">
+                      <div style="font-size:11px;font-weight:500;color:{{ f.t.fg3 }};margin-top:-6px;background:{{ f.t.canvas }};padding:0 4px">{{ n.sub }}</div>
+                    </sc-if>
+                  </sc-if>
+                  <sc-if value="{{ n.isOverflow }}">
+                    <div style="height:32px;padding:0 14px;display:flex;align-items:center;box-sizing:border-box;border-radius:999px;background:{{ f.t.panel }};border:{{ n.border }};font-size:13px;font-weight:600;color:{{ n.ink }};white-space:nowrap">{{ n.name }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+
+              <sc-if value="{{ f.empty }}">
+                <div style="position:absolute;left:0;right:0;top:340px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:2">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:44px;font-weight:800;letter-spacing:-0.03em;color:{{ f.t.fg1 }};text-align:center">Who's connected to who?</div>
+                  <div style="font-size:16px;line-height:1.55;color:{{ f.t.fg2 }};max-width:520px;text-align:center;text-wrap:pretty">Pick two actors, or up to six. Shared films draw as lines. If two of them never met on set, we'll pull in the co-stars who connect them.</div>
+                  <div style="position:relative;margin-top:16px;display:flex;flex-direction:column;gap:24px">
+                    <div style="display:flex;align-items:center;gap:12px;width:520px;height:48px;padding:0 16px;box-sizing:border-box;border:{{ f.searchBorder }};box-shadow:{{ f.searchFocus }};background:{{ f.t.field }};border-radius:8px">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:{{ f.t.fg3 }}"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                      <div style="font-size:16px;color:{{ f.queryColor }}">{{ f.query }}</div>
+                      <sc-if value="{{ f.typeahead }}"><div style="width:1px;height:20px;background:{{ f.t.fg1 }};margin-left:-10px"></div></sc-if>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <div style="font-size:12px;font-weight:500;color:{{ f.t.fg3 }}">Or start with an example</div>
+                      <div style="display:flex;align-items:center;gap:16px;width:520px;padding:16px;box-sizing:border-box;background:{{ f.t.panel }};border:1.5px solid {{ f.t.fg1 }};box-shadow:{{ f.t.shadow }};border-radius:12px">
+                        <div style="display:flex;align-items:center">
+                          <div style="width:40px;height:40px;border-radius:50%;box-sizing:border-box;background:{{ f.t.accentSoft }};border:2px solid {{ f.t.accent }};display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:13px;font-weight:800;color:{{ f.t.accentInk }}">TH</div>
+                          <div style="width:16px;height:1.5px;background:{{ f.t.bridgeLink }}"></div>
+                          <div style="width:20px;height:20px;border-radius:50%;background:{{ f.t.bridgeFill }}"></div>
+                          <div style="width:16px;height:1.5px;background:{{ f.t.bridgeLink }}"></div>
+                          <div style="width:40px;height:40px;border-radius:50%;box-sizing:border-box;background:{{ f.t.accentSoft }};border:2px solid {{ f.t.accent }};display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:13px;font-weight:800;color:{{ f.t.accentInk }}">AH</div>
+                        </div>
+                        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                          <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:{{ f.t.fg1 }};letter-spacing:-0.01em">Tom Hanks + Audrey Hepburn</div>
+                          <div style="font-size:13px;color:{{ f.t.fg3 }}">No shared film, but two co-stars connect them.</div>
+                        </div>
+                        <div style="height:36px;padding:0 16px;display:flex;align-items:center;border-radius:999px;background:{{ f.t.button }};color:{{ f.t.onAccent }};font-size:14px;font-weight:600">Try it</div>
+                      </div>
+                    </div>
+                    <sc-if value="{{ f.typeahead }}">
+                      <div style="position:absolute;left:0;top:52px;width:520px;background:{{ f.t.panel }};border:1px solid {{ f.t.border }};box-shadow:{{ f.t.softShadow }};border-radius:8px;padding:4px 0;box-sizing:border-box">
+                        <sc-for list="{{ f.results }}" as="r" hint-placeholder-count="3">
+                          <div style="display:flex;align-items:center;gap:12px;padding:8px 16px;background:{{ r.bg }}">
+                            <div style="width:40px;height:40px;border-radius:50%;background:{{ f.t.bridgeFill }};display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:{{ f.t.bridgeInk }}">{{ r.initials }}</div>
+                            <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                              <div style="display:flex;align-items:baseline;gap:8px"><div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:{{ f.t.fg1 }};letter-spacing:-0.01em">{{ r.name }}</div><div style="font-size:13px;color:{{ f.t.fg3 }}">{{ r.year }}</div></div>
+                              <div style="font-size:13px;color:{{ f.t.fg3 }}">{{ r.known }}</div>
+                            </div>
+                            <sc-if value="{{ r.active }}"><div style="font-size:11px;font-weight:500;color:{{ f.t.fg3 }};border:1px solid {{ f.t.border }};border-radius:4px;padding:2px 6px">Enter</div></sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.loading }}">
+                <div style="position:absolute;left:0;right:0;top:470px;display:flex;flex-direction:column;align-items:center;gap:8px">
+                  <div style="font-size:13px;color:{{ f.t.fg3 }}">Rolling the credits…</div>
+                  <div style="width:120px;height:2px;background:{{ f.t.border }}"><div style="width:48px;height:2px;background:{{ f.t.fg3 }}"></div></div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.noConn }}">
+                <div style="position:absolute;left:500px;top:380px;width:440px;padding:24px;box-sizing:border-box;background:{{ f.t.panel }};border:1.5px solid {{ f.t.fg1 }};box-shadow:{{ f.t.shadow }};border-radius:12px;display:flex;flex-direction:column;gap:12px;z-index:2">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:24px;font-weight:800;line-height:1.2;letter-spacing:-0.02em;color:{{ f.t.fg1 }}">These two never crossed paths.</div>
+                  <div style="font-size:14px;line-height:1.55;color:{{ f.t.fg2 }}">Audrey Hepburn and Tom Hanks never shared a film. Let one person in between and we'll find who links them.</div>
+                  <div style="display:flex;margin-top:4px"><div style="height:40px;padding:0 18px;display:flex;align-items:center;background:{{ f.t.button }};color:{{ f.t.onAccent }};border-radius:999px;font-size:14px;font-weight:600">Allow 1 person in between</div></div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.route }}">
+                <div style="position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:8px;background:{{ f.t.panel }};border:1px solid {{ f.t.border }};border-radius:12px">
+                  <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:{{ f.t.fg4 }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:220px;text-align:center">
+                    <div style="font-size:14px;font-weight:600;color:{{ f.t.fg1 }}">Route 1 of 129</div>
+                    <div style="font-size:12px;color:{{ f.t.fg3 }}">All have 2 people in between</div>
+                  </div>
+                  <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid {{ f.t.border }};color:{{ f.t.fg1 }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"></path></svg></div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.panel }}">
+                <div style="position:absolute;right:0;top:64px;bottom:0;width:440px;background:{{ f.t.panel }};border-left:1.5px solid {{ f.t.fg1 }};box-sizing:border-box;display:flex;flex-direction:column;z-index:3">
+                  <div style="padding:24px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid {{ f.t.border }}">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                      <div style="font-size:12px;font-weight:500;color:{{ f.t.fg3 }}">{{ f.panelEyebrow }}</div>
+                      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:{{ f.t.fg2 }};margin-right:-8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div>
+                    </div>
+                    <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;line-height:1.15;letter-spacing:-0.02em;color:{{ f.t.fg1 }}">{{ f.panelTitle }}</div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:{{ f.t.fg2 }}">
+                      <div style="width:16px;height:{{ f.panelKeyH }}px;border-radius:2px;background:{{ f.panelKey }}"></div>
+                      <div>{{ f.panelMeta }}</div>
+                    </div>
+                    <sc-if value="{{ f.panelBridges }}">
+                      <div style="display:flex;margin-top:8px"><div style="height:32px;padding:0 14px;display:flex;align-items:center;border:1px solid {{ f.t.border }};border-radius:999px;color:{{ f.t.fg1 }};font-size:13px;font-weight:600">Show all 23 in graph</div></div>
+                    </sc-if>
+                  </div>
+                  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+                    <sc-for list="{{ f.evidence }}" as="ev" hint-placeholder-count="0">
+                      <sc-if value="{{ ev.heading }}">
+                        <div style="padding:16px 24px 0;font-size:12px;font-weight:600;color:{{ f.t.fg3 }}">{{ ev.heading }}</div>
+                      </sc-if>
+                      <sc-for list="{{ ev.films }}" as="fm" hint-placeholder-count="2">
+                        <div style="display:flex;gap:16px;padding:16px 24px;border-bottom:1px solid {{ f.t.border }}">
+                          <div style="width:56px;height:84px;flex-shrink:0;border-radius:4px;background:{{ f.t.poster }};display:flex;align-items:flex-end;padding:6px;box-sizing:border-box;font-size:10px;font-weight:600;color:{{ f.t.fg3 }};line-height:1.2">{{ fm.title }}</div>
+                          <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+                            <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><div style="font-size:15px;font-weight:600;color:{{ f.t.fg1 }}">{{ fm.title }}</div><div style="font-size:13px;color:{{ f.t.fg3 }}">{{ fm.year }}</div></div>
+                            <div style="display:grid;grid-template-columns:112px 1fr;row-gap:4px;column-gap:8px;font-size:13px;line-height:1.4">
+                              <sc-for list="{{ fm.roles }}" as="ro" hint-placeholder-count="2">
+                                <div style="color:{{ f.t.fg2 }};font-weight:600">{{ ro.who }}</div><div style="color:{{ f.t.fg3 }}">{{ ro.role }}</div>
+                              </sc-for>
+                            </div>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </sc-for>
+                    <sc-if value="{{ f.panelBridges }}">
+                      <sc-for list="{{ f.bridgeList }}" as="br" hint-placeholder-count="6">
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid {{ f.t.border }}">
+                          <div style="width:40px;height:40px;flex-shrink:0;border-radius:50%;background:{{ f.t.bridgeFill }};display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:{{ f.t.bridgeInk }}">{{ br.initials }}</div>
+                          <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+                            <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.01em;color:{{ f.t.fg1 }}">{{ br.name }}</div>
+                            <div style="display:grid;grid-template-columns:88px 1fr;row-gap:2px;column-gap:8px;font-size:12px;line-height:1.4">
+                              <div style="color:{{ f.t.fg3 }}">Tom Hanks</div><div style="color:{{ f.t.fg2 }}">{{ br.a }}</div>
+                              <div style="color:{{ f.t.fg3 }}">Billy Crystal</div><div style="color:{{ f.t.fg2 }}">{{ br.b }}</div>
+                            </div>
+                          </div>
+                          <div style="height:28px;padding:0 12px;display:flex;align-items:center;border:1px solid {{ f.t.border }};border-radius:999px;font-size:12px;font-weight:600;color:{{ f.t.fg2 }}">Show</div>
+                        </div>
+                      </sc-for>
+                      <div style="padding:12px 24px;font-size:13px;color:{{ f.t.fg3 }}">11 more below</div>
+                    </sc-if>
+                  </div>
+                  <div style="padding:12px 24px;font-size:11px;line-height:1.5;color:{{ f.t.fg3 }};border-top:1px solid {{ f.t.border }}">Posters and headshots from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.showAttribution }}">
+                <div style="position:absolute;left:24px;bottom:16px;font-size:11px;color:{{ f.t.fg3 }}">Headshots from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-for>
+
+  <section data-screen-label="Components and tokens" style="display:flex;flex-direction:column;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.03em;color:#1A1410">Components and tokens</div>
+      <div style="font-size:16px;color:#4F3F33">Values match <a href="tokens.css">tokens.css</a>. Spacing runs 4, 8, 12, 16, 24, 32, 48.</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;max-width:1960px">
+
+      <div style="width:460px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Color roles</div>
+        <div style="display:grid;grid-template-columns:40px 40px 1fr;column-gap:12px;row-gap:16px;align-items:center;font-size:13px;line-height:1.45;color:#2B211A">
+          <div style="font-size:11px;color:#7A6553">Light</div><div style="font-size:11px;color:#7A6553">Dark</div><div></div>
+          <div style="width:40px;height:40px;border-radius:8px;background:#FF5A36"></div><div style="width:40px;height:40px;border-radius:8px;background:#FF7A5C"></div><div><strong>color-direct</strong> · -text · -surface. Direct shared credit, chosen actor, selected direct link, primary action. Nothing else.</div>
+          <div style="width:40px;height:40px;border-radius:8px;background:#B08A3E"></div><div style="width:40px;height:40px;border-radius:8px;background:#C9A35A"></div><div><strong>color-route</strong> · -text · -surface. The selected indirect route only. Strokes and rings, never large fills.</div>
+          <div style="width:40px;height:40px;border-radius:8px;background:#A08A74"></div><div style="width:40px;height:40px;border-radius:8px;background:#7A6553"></div><div><strong>color-bridge</strong>, color-text-muted, color-border. Co-stars, indirect links, overflow, metadata, filters.</div>
+          <div style="width:40px;height:40px;border-radius:8px;background:#1A1410"></div><div style="width:40px;height:40px;border-radius:8px;background:#FFF8EE;border:1px solid #DCCBB5;box-sizing:border-box"></div><div><strong>color-text-primary</strong>. Text, focus rings, active inputs, open overflow, pins.</div>
+        </div>
+      </div>
+
+      <div style="width:460px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Type</div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.02em;color:#1A1410">Tom Hanks</div><div style="font-size:12px;color:#7A6553">Bricolage Grotesque 800 · wordmark, headings, panel titles</div></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.01em;color:#1A1410">Meg Ryan</div><div style="font-size:12px;color:#7A6553">Bricolage 700 · chosen actor names 16, bridge names 13</div></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:14px;color:#2B211A">Direct link · 4 shared films</div><div style="font-size:12px;color:#7A6553">Figtree 400–600 · connection type, controls, helper text</div></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:13px;color:#7A6553">Sleepless in Seattle · 1993 · Sam Baldwin</div><div style="font-size:12px;color:#7A6553">Figtree 12–13 · film proof, roles, counts</div></div>
+        </div>
+      </div>
+
+      <div style="width:520px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Nodes</div>
+        <div style="display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:112px;height:112px;border-radius:50%;background:#FFE3D9;border:3px solid #FF5A36;box-shadow:5px 5px 0 #1A1410;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:36px;font-weight:800;color:#9A2A10">TH</div>
+            <div style="font-size:12px;color:#7A6553">Chosen · 112</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:72px;height:72px;border-radius:50%;background:#EFE3D3;box-shadow:0 0 0 4px #FFFFFF,0 0 0 6px #7A6553;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:21px;font-weight:800;color:#4F3F33">JG</div>
+            <div style="font-size:12px;color:#7A6553;margin-top:6px">Hub · 72</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:56px;height:56px;border-radius:50%;background:#EFE3D3;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#4F3F33">KD</div>
+            <div style="font-size:12px;color:#7A6553">Bridge · 56</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:56px;height:56px;border-radius:50%;background:#EFE3D3;box-shadow:0 0 0 3px #FFFFFF,0 0 0 6px #B08A3E;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#4F3F33">JG</div>
+            <div style="font-size:12px;color:#7A6553;margin-top:6px">On selected route</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:112px;height:112px;border-radius:50%;border:2px dashed #A08A74;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#7A6553"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></div>
+            <div style="font-size:12px;color:#7A6553">Add · 112 dashed</div>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#4F3F33">shadow-selected (hard offset) is reserved for chosen actors and important panels. Bridge and hub headshots render desaturated; chosen headshots are full color. Initials are the fallback when TMDB has no image.</div>
+      </div>
+
+      <div style="width:420px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Links</div>
+        <div style="display:grid;grid-template-columns:96px 1fr 40px;align-items:center;row-gap:16px;font-size:13px;color:#2B211A">
+          <div>1 film</div><div style="height:1.5px;background:#FF5A36"></div><div style="text-align:right;color:#7A6553">1.5</div>
+          <div>2</div><div style="height:3px;background:#FF5A36"></div><div style="text-align:right;color:#7A6553">3</div>
+          <div>3</div><div style="height:4.5px;background:#FF5A36"></div><div style="text-align:right;color:#7A6553">4.5</div>
+          <div>4–5</div><div style="height:6px;background:#FF5A36"></div><div style="text-align:right;color:#7A6553">6</div>
+          <div>6+</div><div style="height:8px;background:#FF5A36"></div><div style="text-align:right;color:#7A6553">8</div>
+          <div>Selected direct</div><div style="height:6px;background:#FF5A36;box-shadow:0 0 0 5px #FFE3D9;border-radius:3px"></div><div style="text-align:right;color:#7A6553">+10</div>
+          <div>Via co-star</div><div style="height:1.5px;background:#A08A74"></div><div style="text-align:right;color:#7A6553">same</div>
+          <div>Selected route</div><div style="height:3px;background:#B08A3E"></div><div style="text-align:right;color:#7A6553">+1.5</div>
+          <div>Overflow</div><div style="border-top:1px dashed #A08A74"></div><div style="text-align:right;color:#7A6553">1</div>
+        </div>
+      </div>
+
+      <div style="width:360px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">States and focus</div>
+        <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start">
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:999px;border:1px solid #DCCBB5;font-size:13px;font-weight:600;color:#2B211A">+18 more</div><div style="font-size:13px;color:#7A6553">Overflow, rest</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:999px;border:1px solid #7A6553;background:#F6ECDD;font-size:13px;font-weight:600;color:#1A1410">+18 more</div><div style="font-size:13px;color:#7A6553">Hover</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:32px;padding:0 14px;display:flex;align-items:center;box-sizing:border-box;border-radius:999px;border:2px solid #1A1410;font-size:13px;font-weight:600;color:#1A1410">+18 more</div><div style="font-size:13px;color:#7A6553">Open (4b)</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="height:36px;padding:0 16px;display:flex;align-items:center;border-radius:999px;background:#FF5A36;color:#1A1410;font-size:14px;font-weight:600;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #1A1410">Try it</div><div style="font-size:13px;color:#7A6553">Keyboard focus</div></div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#4F3F33">Every focusable element gets a 2px ink ring at 2px offset, including bubbles and links. Strong borders appear only on active inputs and real separation.</div>
+      </div>
+
+      <div style="width:420px;background:#FFFFFF;border-radius:16px;padding:32px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Motion</div>
+        <div style="display:grid;grid-template-columns:140px 1fr;row-gap:12px;column-gap:16px;font-size:13px;line-height:1.5;color:#2B211A">
+          <div style="font-weight:600">Direct link found</div><div style="color:#4F3F33">Stroke draws from one actor to the other, 400ms, ease-out.</div>
+          <div style="font-weight:600">Bridge added</div><div style="color:#4F3F33">Fades in and scales 0.85 to 1, 280ms, staggered 40ms.</div>
+          <div style="font-weight:600">Layout</div><div style="color:#4F3F33">Settles within 600ms, then holds still. No drifting at rest.</div>
+          <div style="font-weight:600">Selection</div><div style="color:#4F3F33">Halo, ring, and fade of unrelated links, 150ms.</div>
+          <div style="font-weight:600">Reduced motion</div><div style="color:#4F3F33">Everything appears in place.</div>
+        </div>
+      </div>
+
+      <div style="width:360px;background:#FFFFFF;border:1px solid #EFE3D3;box-shadow:0 8px 24px rgba(26,20,16,.10);border-radius:12px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#4F3F33">Settings popover</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:14px;font-weight:600;color:#1A1410">Films that count</div>
+          <div style="display:flex;flex-direction:column;border:1px solid #EFE3D3;border-radius:8px;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;color:#2B211A;border-bottom:1px solid #EFE3D3"><div>Hit films</div><div style="color:#7A6553">about 7,000</div></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;color:#1A1410;background:#F6ECDD;font-weight:600;border-bottom:1px solid #EFE3D3"><div>Popular films</div><div>about 19,000</div></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;color:#2B211A"><div>All rated films</div><div style="color:#7A6553">about 47,000</div></div>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:#7A6553">Fewer films means fewer bridges. Hanks and Crystal: 23 at Popular, 12 at Hit films.</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:14px;font-weight:600;color:#1A1410">Bridges shown per pair</div>
+          <div style="display:flex;align-items:center;border:1px solid #EFE3D3;border-radius:8px">
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#2B211A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path></svg></div>
+            <div style="width:32px;text-align:center;font-size:14px;font-weight:600">5</div>
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#2B211A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  palettes() {
+    const W = ['#EFE3D3','#DCCBB5','#A08A74','#7A6553','#4F3F33','#2B211A','#1A1410'];
+    const WD = ['#33281F','#4F3F33','#8A7561','#B3A08B','#DCCBB5','#EFE3D3','#FFF8EE'];
+    const b = (o, dark) => ({ canvas:o.canvas, chrome:o.chrome, panel:o.chrome, field:o.field || (dark ? o.canvas : '#FFFFFF'), muted:o.muted, poster:o.n[0], fg1:o.n[6], fg2:o.n[5], fg3:o.n[3], fg4:o.n[2], border:o.n[0], borderStrong:o.n[1], accent:o.accent, accentInk:o.ink, accentSoft:o.soft, button:o.accent, onAccent:o.on, hard:o.hard, route:o.route, routeInk:o.rInk, routeSoft:o.rSoft, bridgeFill:o.n[0], bridgeInk:o.n[4], bridgeLink:o.bl || o.n[2], shadow:`6px 6px 0 ${dark ? '#000000' : o.n[6]}`, softShadow: dark ? '0 8px 24px rgba(0,0,0,.5)' : '0 8px 24px rgba(26,20,16,.10)' });
+    const P = {
+      coral: { name:'Coral and gold', note:'The current direction. Warm ivory, coral for direct credits, gold for a selected route.',
+        L:{ canvas:'#FFF8EE', chrome:'#FFFFFF', n:W, muted:'#F6ECDD', accent:'#FF5A36', ink:'#9A2A10', soft:'#FFE3D9', on:'#1A1410', route:'#B08A3E', rInk:'#6B4E14', rSoft:'#F3E6C8', hard:'#1A1410' },
+        D:{ canvas:'#1B1512', chrome:'#120E0C', n:WD, muted:'#261E19', accent:'#FF7A5C', ink:'#FFD3C4', soft:'#5A1F10', on:'#120E0C', route:'#C9A35A', rInk:'#E6CC94', rSoft:'#3B301D', hard:'#5A1F10', bl:'#7A6553' } },
+    };
+    Object.values(P).forEach(p => { p.light = b(p.L, false); p.dark = b(p.D, true); });
+    return P;
+  }
+  names() {
+    return { hanks:'Tom Hanks', ryan:'Meg Ryan', hepburn:'Audrey Hepburn', goodman:'John Goodman', kdavid:'Keith David', crystal:'Billy Crystal', bacon:'Kevin Bacon', roberts:'Julia Roberts', fisher:'Carrie Fisher', wright:'Robin Wright', walken:'Christopher Walken', hara:'Setsuko Hara', ryu:'Chishū Ryū', scorsese:'Martin Scorsese', marley:'Ziggy Marley' };
+  }
+  ini(n) { const p = n.split(' '); return (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+  sw(n) { return n >= 6 ? 8 : n >= 4 ? 6 : n === 3 ? 4.5 : n === 2 ? 3 : 1.5; }
+  states() {
+    const r = (who, role) => ({ who, role });
+    const pairFilms = [
+      { title:'Joe Versus the Volcano', year:'1990', roles:[r('Tom Hanks','Joe Banks'), r('Meg Ryan','DeDe / Angelica / Patricia')] },
+      { title:'Sleepless in Seattle', year:'1993', roles:[r('Tom Hanks','Sam Baldwin'), r('Meg Ryan','Annie Reed')] },
+      { title:"You've Got Mail", year:'1998', roles:[r('Tom Hanks','Joe Fox'), r('Meg Ryan','Kathleen Kelly')] },
+      { title:'Ithaca', year:'2015', roles:[r('Tom Hanks','Matthew Macauley'), r('Meg Ryan','Mrs. Macauley')] }
+    ];
+    const goodmanEvidence = [
+      { heading:'Link 1 · with Audrey Hepburn', films:[{ title:'Always', year:'1989', roles:[r('Audrey Hepburn','Hap'), r('John Goodman','Al Yackey')] }] },
+      { heading:'Link 2 · with Tom Hanks', films:[{ title:'Punchline', year:'1988', roles:[r('Tom Hanks','Steven Gold'), r('John Goodman','John Krytsick')] }] }
+    ];
+    const bridgeList = [
+      ['Helen Hunt','Cast Away','Mr. Saturday Night'],
+      ['Catherine Zeta-Jones','The Terminal',"America's Sweethearts"],
+      ['Stanley Tucci','The Terminal',"America's Sweethearts"],
+      ['John Goodman','Punchline','Monsters, Inc. (voice)'],
+      ['Wallace Shawn','Toy Story (voice)','The Princess Bride'],
+      ['John Ratzenberger','Toy Story (voice)','Monsters, Inc. (voice)']
+    ].map(([name, a, b]) => ({ name, a, b, initials: this.ini(name) }));
+    const s4nodes = [['hanks','chosen',300,482],['crystal','chosen',1140,482],['wright','bridge',720,170],['roberts','bridge',720,290],['ryan','bridge',720,410],['walken','bridge',720,530],['fisher','bridge',720,650],['_more','overflow',720,770,{name:'+18 more'}],['_add','add',1310,760]];
+    const s4links = [['hanks','ryan',4],['crystal','ryan',1],['hanks','roberts',2],['crystal','roberts',1],['hanks','walken',1],['crystal','walken',1],['hanks','wright',1],['crystal','wright',1],['hanks','fisher',1],['crystal','fisher',1],['hanks','_more',1,0,null,'more'],['crystal','_more',1,0,null,'more']];
+    const s3nodes = (sel) => [['hepburn','chosen',420,482],['hanks','chosen',1020,482],['goodman','bridge',720,330,sel ? {selected:true} : {}],['kdavid','bridge',720,640,sel ? {dim:true} : {}],['_add','add',1270,750, sel ? {dim:true} : {}]];
+    const s3links = (sel) => [['hepburn','goodman',1,-20,'Always',sel ? 'route' : null],['goodman','hanks',1,-20,'Punchline',sel ? 'route' : null],['hepburn','kdavid',1,20,'Always',sel ? 'dim' : null],['kdavid','hanks',1,20,'Cloud Atlas',sel ? 'dim' : null]];
+    return [
+      { num:'1', title:'Empty start', note:'Search, or one click on the featured example. Hanks and Hepburn never shared a film, so the first thing a new visitor sees is the core trick: co-stars filling the gap.', empty:true, sliderOff:true, nodes:[['_add','add',720,240,{noLabel:true}]] },
+      { num:'1b', title:'Actor search', note:'Typing opens the typeahead. Each row carries a headshot, the actor name, birth year, and a known-for film so shared names are easy to tell apart. The focused field shows the ink focus ring.', empty:true, typeahead:true, sliderOff:true, nodes:[['_add','add',720,240,{noLabel:true}]] },
+      { num:'2', title:'Two actors, direct link', note:'They share credits, so the arc is coral. Four films give it the 6px stroke.', summary:'Direct link · 4 shared films', nodes:[['hanks','chosen',470,482],['ryan','chosen',970,482],['_add','add',1250,740]], links:[['hanks','ryan',4,-90,'4 shared films','direct']] },
+      { num:'3', title:'Two actors, one person in between', note:'No shared film, so two co-stars are added. Bridges are smaller and sepia; their links carry the film title as quiet proof.', summary:'No shared films · 2 co-stars link them', nodes:s3nodes(false), links:s3links(false) },
+      { num:'3b', title:'Selected bridge', note:'Clicking a bridge actor or either of its links selects that route. It gets a heavier gold stroke and a gold ring, unrelated links fade, and the panel shows the proof: the film on each side and every role.', summary:'No shared films · 2 co-stars link them', shift:true, panel:'evidence', evidence:goodmanEvidence, nodes:s3nodes(true).filter(n => n[0] !== '_add'), links:s3links(true) },
+      { num:'4', title:'Two actors, crowded bridges', note:'23 co-stars link Hanks and Crystal. The top 5 sit in a column between them with the strongest on the shortest path; the other 18 collapse into one overflow node with dashed links.', summary:'No shared films · 23 co-stars link them · showing 5', nodes:s4nodes, links:s4links },
+      { num:'4b', title:'Overflow expanded', note:'Clicking “+18 more” opens the list in the side panel. The open overflow node takes an ink border, not coral. Each row lists the film on each side; voice roles are labeled.', summary:'No shared films · 23 co-stars link them · showing 5', shift:true, panel:'bridges', bridgeList, nodes:s4nodes.map(n => n[0] === '_more' ? ['_more','overflow',720,770,{name:'+18 more', selected:true}] : n).filter(n => n[0] !== '_add'), links:s4links },
+      { num:'5', title:'Four actors with a hub', note:'Hanks and Bacon share Apollo 13. Every other pair needs a bridge, and John Goodman bridges all five, so he gets a ring and settles in the middle. Hepburn has been dragged and pinned, which enables Reset layout.', summary:'6 pairs · 1 direct · 5 through co-stars', pinned:true, countText:'4 of 6', nodes:[['hanks','chosen',380,250],['bacon','chosen',1060,250],['crystal','chosen',380,700],['hepburn','chosen',1060,700,{pinned:true}],['goodman','hub',720,475,{sub:'Links all 4'}],['ryan','bridge',165,430],['_more','overflow',165,565,{name:'+22 more'}],['_add','add',1300,475]], links:[['hanks','bacon',1,-70,'Apollo 13','direct'],['goodman','hanks',1],['goodman','crystal',2],['goodman','hepburn',1],['goodman','bacon',1],['hanks','ryan',4],['crystal','ryan',1],['hanks','_more',1,0,null,'more'],['crystal','_more',1,0,null,'more']] },
+      { num:'6', title:'Deeper path', note:'One route out of 129 is shown, and the shown route counts as selected, so it draws in gold. The stepper moves to the next one.', summary:'Shortest route · 2 people in between', slider:3, route:true, nodes:[['hara','chosen',200,470],['ryu','bridge',530,380,{selected:true}],['scorsese','bridge',900,560,{selected:true}],['marley','chosen',1240,470],['_add','add',1290,190]], links:[['hara','ryu',6,-10,'6 films','route'],['ryu','scorsese',1,-30,'Dreams','route'],['scorsese','marley',1,-30,'Shark Tale · voice','route']] },
+      { num:'7', title:'Link detail', note:'Clicking a direct link selects it with a coral halo and opens the films. A panel fits a dozen films; a popover would not.', summary:'Direct link · 4 shared films', shift:true, panel:'films', evidence:[{ heading:'', films:pairFilms }], nodes:[['hanks','chosen',470,482],['ryan','chosen',970,482],['_add','add',1250,740]], links:[['hanks','ryan',4,-90,'4 shared films','direct',true]] },
+      { num:'8', title:'Loading', note:'Searches finish in under a second, so loading is one quiet line. Chosen bubbles are already placed; links draw in when results land.', loading:true, nodes:[['hanks','chosen',300,482],['crystal','chosen',1140,482],['_add','add',1310,760]] },
+      { num:'9', title:'No connection', note:'Only possible with the slider at 0. The message names the fix and applies it in one click.', slider:0, noConn:true, nodes:[['hepburn','chosen',300,482],['hanks','chosen',1140,482],['_add','add',1310,760]] }
+    ];
+  }
+  frame(s, mode, pal) {
+    const t = this.palettes()[pal][mode], N = this.names();
+    const sx = s.shift ? 1000 / 1440 : 1;
+    const pos = {};
+    const display = "'Bricolage Grotesque',sans-serif";
+    const nodes = (s.nodes || []).map(([id, type, x0, y, o = {}]) => {
+      const x = Math.round(x0 * sx); pos[id] = { x, y };
+      const name = o.noLabel ? '' : (o.name || N[id] || (type === 'add' ? 'Add actor' : ''));
+      const base = { name, initials: '', isBubble: type !== 'overflow', isAdd: type === 'add', isOverflow: type === 'overflow', isChosen: type === 'chosen', pinned: !!o.pinned, sub: o.sub || '', ring: 'none', op: o.dim ? 0.35 : 1, lf: display };
+      if (type === 'chosen') return { ...base, size:112, w:180, left:x-90, top:y-56, bg:t.accentSoft, border:`3px solid ${t.accent}`, ring:`5px 5px 0 ${t.hard}`, ink:t.accentInk, fs:36, ls:16, lw:700, lc:t.fg1, initials:this.ini(N[id]) };
+      if (type === 'bridge') return { ...base, size:56, w:150, left:x-75, top:y-28, bg:t.bridgeFill, border:'none', ring: o.selected ? `0 0 0 3px ${t.canvas}, 0 0 0 6px ${t.route}` : 'none', ink:t.bridgeInk, fs:17, ls:13, lw: o.selected ? 700 : 600, lc: o.selected ? t.fg1 : t.fg2, initials:this.ini(N[id]) };
+      if (type === 'hub') return { ...base, size:72, w:160, left:x-80, top:y-36, bg:t.bridgeFill, border:'none', ring:`0 0 0 4px ${t.canvas}, 0 0 0 6px ${t.fg3}`, ink:t.bridgeInk, fs:21, ls:14, lw:700, lc:t.fg1, initials:this.ini(N[id]) };
+      if (type === 'add') return { ...base, size:112, w:180, left:x-90, top:y-56, bg:'transparent', border:`2px dashed ${t.fg4}`, ink:t.fg3, fs:1, ls:13, lw:500, lc:t.fg3, lf:'Figtree,sans-serif' };
+      return { ...base, w:160, left:x-80, top:y-16, border: o.selected ? `2px solid ${t.fg1}` : `1px solid ${t.borderStrong}`, ink: o.selected ? t.fg1 : t.fg2 };
+    });
+    const links = [], labels = [];
+    (s.links || []).forEach(([a, b, n, curv = 0, label, kind, selected]) => {
+      const A = pos[a], B = pos[b];
+      const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy);
+      const cx = (A.x + B.x) / 2 - dy / len * curv, cy = (A.y + B.y) / 2 + dx / len * curv;
+      const direct = kind === 'direct', more = kind === 'more', route = kind === 'route', dim = kind === 'dim';
+      const w = more ? 1 : this.sw(n) + (route ? 1.5 : 0);
+      links.push({ d:`M${A.x} ${A.y} Q${cx} ${cy} ${B.x} ${B.y}`, w, c: direct ? t.accent : route ? t.route : t.bridgeLink, dash: more ? '4 4' : 'none', haloC: t.accentSoft, haloW: w + 10, haloOp: selected ? 1 : 0, op: dim ? 0.3 : 1 });
+      if (label) {
+        const lx = Math.round(0.25 * A.x + 0.5 * cx + 0.25 * B.x), ly = Math.round(0.25 * A.y + 0.5 * cy + 0.25 * B.y);
+        if (direct) labels.push({ x:lx, y:ly, text:label, fs:12, fw:600, c: selected ? t.onAccent : t.accentInk, bg: selected ? t.accent : t.canvas, bd: t.accent, op:1 });
+        else if (route) labels.push({ x:lx, y:ly, text:label, fs:12, fw:600, c:t.routeInk, bg:t.canvas, bd:t.route, op:1 });
+        else labels.push({ x:lx, y:ly, text:label, fs:11, fw:500, c:t.fg3, bg:t.canvas, bd:'transparent', op: dim ? 0.4 : 1 });
+      }
+    });
+    const v = s.slider ?? 1;
+    const results = [
+      { name:'Chris Evans', year:'b. 1981', known:'Knives Out · 41 films', initials:'CE' },
+      { name:'Chris Evans', year:'b. 1966', known:'3 films', initials:'CE' },
+      { name:'Christopher Evan Welch', year:'b. 1965', known:'Vicky Cristina Barcelona · 9 films', initials:'CW' }
+    ].map((r, i) => ({ ...r, active: i === 0, bg: i === 0 ? t.muted : 'transparent' }));
+    const P = {
+      films: { eyebrow:'Shared films', title:'Tom Hanks and Meg Ryan', meta:'Direct link · 4 shared films · 1990–2015', key:t.accent, keyH:6 },
+      evidence: { eyebrow:'Why this co-star appears', title:'John Goodman', meta:'Links Audrey Hepburn and Tom Hanks · 1 person in between', key:t.route, keyH:3 },
+      bridges: { eyebrow:'Co-stars in between', title:'Tom Hanks and Billy Crystal', meta:'18 more beyond the top 5 · most shared films first', key:t.bridgeLink, keyH:2 }
+    }[s.panel] || {};
+    return {
+      label: mode === 'light' ? 'Light' : 'Dark', t, nodes, links, labels,
+      summary: s.summary || '', hasSearch: !s.empty, countText: s.countText || '2 of 6',
+      sliderOp: s.sliderOff ? 0.4 : 1, sliderFill: v * 48, knob: v * 48 - 8,
+      stops: [0,1,2,3].map(n => ({ n: String(n), left: n * 48, c: n === v ? t.fg1 : t.fg3, fw: n === v ? 700 : 500 })),
+      resetColor: s.pinned ? t.fg1 : t.fg4,
+      empty: !!s.empty, typeahead: !!s.typeahead, query: s.typeahead ? 'Chris Ev' : 'Search for an actor', queryColor: s.typeahead ? t.fg1 : t.fg3,
+      searchBorder: s.typeahead ? `1.5px solid ${t.fg1}` : `1px solid ${t.borderStrong}`, searchFocus: s.typeahead ? `0 0 0 2px ${t.canvas}, 0 0 0 4px ${t.fg1}` : 'none', results,
+      loading: !!s.loading, noConn: !!s.noConn, route: !!s.route,
+      panel: !!s.panel, panelBridges: s.panel === 'bridges',
+      panelEyebrow: P.eyebrow || '', panelTitle: P.title || '', panelMeta: P.meta || '', panelKey: P.key || 'transparent', panelKeyH: P.keyH || 0,
+      evidence: s.evidence || [], bridgeList: s.bridgeList || [],
+      showAttribution: !s.panel
+    };
+  }
+  renderVals() {
+    if (!this._groups) this._groups = this.states().map(s => ({ num: s.num, title: s.title, note: s.note, frames: [this.frame(s, 'light', 'coral'), this.frame(s, 'dark', 'coral')] }));
+    return { groups: this._groups };
+  }
+}
+</script>
+</body>
+</html>
