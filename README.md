@@ -45,7 +45,7 @@ npm run data:images
 node scripts/enrich-images.mjs --limit=2000
 ```
 
-The default checks the 500 actors with the most included film credits and 500 most-voted films. It resumes existing lookups and saves only public image paths to `public/data/images.json`. The token is never sent to the browser or committed. Missing images use initials/poster fallbacks. The official approved TMDB logo is included at `public/tmdb.svg`; the About dialog displays it together with TMDB's required attribution when image data is available. See https://developer.themoviedb.org/docs/faq.
+The default prioritizes the featured examples and their co-stars, then the 500 actors with the most popular-film credits, plus at least 500 film posters. `--limit` expands this popular-actor and poster coverage. It resumes existing lookups, retries rate limits, and saves only public image paths to `public/data/images.json`. The token is never sent to the browser or committed. Missing images use initials/poster fallbacks. The official approved TMDB logo is included at `public/tmdb.svg`; the About dialog displays it together with TMDB's required attribution when image data is available. See https://developer.themoviedb.org/docs/faq.
 
 ## GitHub Pages
 
