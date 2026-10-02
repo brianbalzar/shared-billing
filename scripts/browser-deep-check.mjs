@@ -19,6 +19,7 @@ await clearActors(page);
 await loadExample(page);
 await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
 await add('Billy Crystal'); await add('Kevin Bacon');
+await page.locator('.pair-control').filter({ hasText: 'Tom Hanks ↔ Billy Crystal' }).click();
 await page.locator('.hub .node-button').first().waitFor();
 await page.screenshot({ path: 'qa/hub.png' });
 await add('Meg Ryan'); await add('Julia Roberts');

@@ -1,74 +1,122 @@
-import { forceSimulation, forceLink, forceManyBody, forceCollide, forceX, forceY } from 'd3-force';
-import type { SimulationNodeDatum } from 'd3-force';
-import type { Actor, Graph } from './types';
-export interface Node extends SimulationNodeDatum { id: string; actor?: Actor; kind: 'chosen' | 'bridge' | 'hub' | 'overflow'; pair?: string; label?: string; linksTo: Set<string>; x: number; y: number; radius: number }
-export interface Edge { id: string; a: string; b: string; pair: string; kind: 'direct' | 'bridge' | 'overflow'; routeActor?: string; title: string; count: number; deep: boolean }
-export function makeGraph(graph: Graph, shown: number, expanded: Record<string, string[]>) {
-  const nodes = new Map<string, Node>(), edges: Edge[] = [];
-  const add = (a: Actor, chosen = false) => { if (!nodes.has(a.id)) nodes.set(a.id, { id: a.id, actor: a, kind: chosen ? 'chosen' : 'bridge', linksTo: new Set(), x: 0, y: 0, radius: chosen ? 55 : 28 }); };
-  graph.actors.forEach(a => add(a, true));
-  for (const pair of graph.pairs) {
-    if (pair.direct) edges.push({ id: `direct:${pair.id}`, a: pair.a.id, b: pair.b.id, pair: pair.id, kind: 'direct', title: pair.direct.films.length === 1 ? pair.direct.films[0].title : `${pair.direct.films.length} shared films`, count: pair.direct.films.length, deep: false });
-    const routes = pair.bridges.length ? pair.bridges.filter((r, i) => i < shown || expanded[pair.id]?.includes(r.actors[1].id)) : pair.route ? [pair.route] : [];
-    for (const route of routes) {
-      route.actors.forEach(a => add(a));
-      route.actors.slice(1, -1).forEach(a => { nodes.get(a.id)!.linksTo.add(pair.a.id); nodes.get(a.id)!.linksTo.add(pair.b.id); });
+import type { Actor, Graph, Pair, Route } from './types';
+export interface Node { id: string; actor?: Actor; kind: 'chosen' | 'bridge' | 'hub' | 'overflow'; pair?: string; pairs: string[]; label?: string; linksTo: Set<string>; x: number; y: number; radius: number }
+export interface Edge { id: string; a: string; b: string; pair: string; pairs: string[]; kind: 'direct' | 'bridge' | 'overflow'; routeActor?: string; title: string; count: number; deep: boolean }
+export function routeStrength(route: Route) {
+  const counts = route.links.map(l => l.films.length);
+  const quality = route.links.reduce((sum, link) => sum + Math.max(0, ...link.films.map(f => f.rating * Math.log10(Math.max(1, f.votes)))), 0);
+  return Math.min(...counts) * 4 + counts.reduce((sum, count) => sum + count, 0) + quality / 100;
+}
+export function strongestPair(graph: Graph): string | null {
+  const score = (p: Pair) => p.direct ? 100 + p.direct.films.length : p.bridges.length ? routeStrength(p.bridges[0]) + Math.log2(p.bridges.length + 1) : p.route ? 1 / (p.people || 1) : 0;
+  return [...graph.pairs].sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))[0]?.id || null;
+}
+export function corridor(a: { x: number; y: number }, b: { x: number; y: number }, width: number, height: number, count: number, focused: boolean) {
+  const w = Math.max(380, width), h = Math.max(480, height), top = Math.min(count > 4 ? 270 : 230, h * .36);
+  const cx = w / 2, cy = (top + h - 185) / 2, dx = b.x - a.x, dy = b.y - a.y, distance = Math.hypot(dx, dy) || 1;
+  let nx = -dy / distance, ny = dx / distance;
+  if (nx * ((a.x + b.x) / 2 - cx) + ny * ((a.y + b.y) / 2 - cy) < 0) { nx = -nx; ny = -ny; }
+  const diagonal = count >= 4 && Math.hypot((a.x + b.x) / 2 - cx, (a.y + b.y) / 2 - cy) < 50;
+  const bow = count === 2 ? -65 : diagonal ? Math.min(140, distance * .23) : focused ? 48 : 30;
+  return { nx, ny, bow, diagonal, x: (a.x + b.x) / 2 + nx * bow * 2, y: (a.y + b.y) / 2 + ny * bow * 2 };
+}
+export function makeGraph(graph: Graph, shown: number, expanded: Record<string, string[]>, focus: string | null = null) {
+  const nodes = new Map<string, Node>(), edges: Edge[] = [], visible: Record<string, string[]> = {};
+  const chosenIds = new Set(graph.actors.map(a => a.id)), multi = graph.actors.length > 2;
+  const memberships = new Map<string, Set<string>>(), affiliations = new Map<string, Set<string>>(), hubScores = new Map<string, number>();
+  for (const pair of graph.pairs) for (const route of pair.bridges) {
+    const id = route.actors[1].id;
+    if (!memberships.has(id)) { memberships.set(id, new Set()); affiliations.set(id, new Set()); }
+    memberships.get(id)!.add(pair.id); affiliations.get(id)!.add(pair.a.id); affiliations.get(id)!.add(pair.b.id);
+    const requested = (expanded[pair.id] || []).indexOf(id);
+    hubScores.set(id, (hubScores.get(id) || 0) + routeStrength(route) + (pair.id === focus ? 20 + (requested >= 0 ? 2000 / (requested + 1) : 0) : 0));
+  }
+  const hubIds = new Set([...affiliations].filter(([id, selected]) => selected.size >= 3 && !chosenIds.has(id)).sort(([a], [b]) => hubScores.get(b)! - hubScores.get(a)! || a.localeCompare(b)).slice(0, 2).map(([id]) => id));
+  const add = (actor: Actor, pair?: string) => {
+    const kind = chosenIds.has(actor.id) ? 'chosen' : hubIds.has(actor.id) ? 'hub' : 'bridge';
+    const id = kind === 'bridge' ? `${pair}:${actor.id}` : actor.id;
+    if (!nodes.has(id)) nodes.set(id, { id, actor, kind, pair, pairs: kind === 'hub' ? [...memberships.get(actor.id)!] : pair ? [pair] : [], linksTo: kind === 'hub' ? affiliations.get(actor.id)! : new Set(), x: 0, y: 0, radius: kind === 'chosen' ? 55 : kind === 'hub' ? 36 : 28 });
+    return id;
+  };
+  graph.actors.forEach(a => add(a));
+  const ordered = [...graph.pairs].sort((a, b) => Number(b.id === focus) - Number(a.id === focus));
+  let remaining = graph.actors.length === 3 ? 10 : Infinity;
+  for (const pair of ordered) {
+    visible[pair.id] = [];
+    if (pair.direct) edges.push({ id: `direct:${pair.id}`, a: pair.a.id, b: pair.b.id, pair: pair.id, pairs: [pair.id], kind: 'direct', title: pair.direct.films.length === 1 ? pair.direct.films[0].title : `${pair.direct.films.length} shared films`, count: pair.direct.films.length, deep: false });
+    const active = graph.actors.length < 4 || pair.id === focus;
+    const limit = !active ? 0 : multi ? Math.min(4, pair.id === focus ? shown + 1 : Math.min(shown, 2)) : shown;
+    const requested = expanded[pair.id] || [];
+    const ranked = [...pair.bridges].sort((a, b) => Number(requested.includes(b.actors[1].id)) - Number(requested.includes(a.actors[1].id)) || (requested.includes(a.actors[1].id) && requested.includes(b.actors[1].id) ? requested.indexOf(a.actors[1].id) - requested.indexOf(b.actors[1].id) : routeStrength(b) - routeStrength(a)));
+    const candidates = pair.bridges.length ? ranked : active && pair.route ? [pair.route] : [];
+    let used = 0;
+    for (const route of candidates) {
+      if (!active) break;
+      if (pair.bridges.length && used >= (multi ? limit : limit + requested.length)) break;
+      const intermediates = route.actors.slice(1, -1);
+      if (intermediates.some(a => (affiliations.get(a.id)?.size || 0) >= 3 && !hubIds.has(a.id) && !chosenIds.has(a.id))) continue;
+      const cost = intermediates.filter(a => !chosenIds.has(a.id) && !(hubIds.has(a.id) && nodes.has(a.id))).length;
+      if (cost > remaining) continue;
+      remaining -= cost; used++;
+      if (pair.bridges.length) visible[pair.id].push(route.actors[1].id);
+      const routeNodes = route.actors.map(a => add(a, pair.id));
+      intermediates.forEach(a => { const node = nodes.get(add(a, pair.id))!; if (node.kind === 'bridge') { node.linksTo.add(pair.a.id); node.linksTo.add(pair.b.id); } });
       route.links.forEach((link, i) => {
-        const id = [link.a, link.b].sort().join(':');
-        const existing = edges.find(e => e.a === link.a && e.b === link.b && e.pair === pair.id);
-        if (!existing) edges.push({ id: `${pair.id}:${id}`, a: link.a, b: link.b, pair: pair.id, kind: 'bridge', routeActor: route.actors[1].id, title: link.films.length === 1 ? link.films[0].title : `${link.films.length} films`, count: link.films.length, deep: !!pair.route });
+        const a = routeNodes[i], b = routeNodes[i + 1], key = [a, b].sort().join(':');
+        const existing = edges.find(e => e.kind === 'bridge' && [e.a, e.b].sort().join(':') === key);
+        if (existing) { if (!existing.pairs.includes(pair.id)) existing.pairs.push(pair.id); return; }
+        edges.push({ id: key, a, b, pair: pair.id, pairs: [pair.id], kind: 'bridge', routeActor: route.actors[1].id, title: link.films.length === 1 ? link.films[0].title : `${link.films.length} films`, count: link.films.length, deep: !!pair.route });
       });
     }
-    const hidden = pair.bridges.length - routes.length;
-    if (hidden > 0) {
+    const hidden = pair.bridges.length - visible[pair.id].length;
+    if (hidden > 0 && active) {
       const id = `overflow:${pair.id}`;
-      nodes.set(id, { id, kind: 'overflow', pair: pair.id, label: `+${hidden} more`, linksTo: new Set([pair.a.id, pair.b.id]), x: 0, y: 0, radius: 42 });
-      [pair.a, pair.b].forEach(a => edges.push({ id: `${id}:${a.id}`, a: a.id, b: id, pair: pair.id, kind: 'overflow', title: '', count: 0, deep: false }));
+      nodes.set(id, { id, kind: 'overflow', pair: pair.id, pairs: [pair.id], label: `+${hidden} more`, linksTo: new Set([pair.a.id, pair.b.id]), x: 0, y: 0, radius: 42 });
+      [pair.a, pair.b].forEach(a => edges.push({ id: `${id}:${a.id}`, a: a.id, b: id, pair: pair.id, pairs: [pair.id], kind: 'overflow', title: '', count: 0, deep: false }));
     }
   }
-  for (const n of nodes.values()) if (n.kind === 'bridge' && n.linksTo.size >= 3) { n.kind = 'hub'; n.radius = 36; }
-  return { nodes: [...nodes.values()], edges };
+  return { nodes: [...nodes.values()], edges, visible };
 }
-export function settle(nodes: Node[], edges: Edge[], width: number, height: number, pinned: Record<string, { x: number; y: number }>) {
-  const w = Math.max(380, width), h = Math.max(360, height), cx = w / 2, cy = h / 2;
-  const chosen = nodes.filter(n => n.kind === 'chosen');
-  chosen.forEach((n, i) => {
-    const angle = chosen.length === 2 ? i * Math.PI + Math.PI : (i / chosen.length) * Math.PI * 2 - Math.PI * 3 / 4;
-    n.x = cx + Math.cos(angle) * Math.min(w * .29, 420); n.y = cy + Math.sin(angle) * Math.min(h * .29, 245);
+// Stable anchors and pair-owned corridors replace the global force simulation.
+export function settle(nodes: Node[], edges: Edge[], width: number, height: number, pinned: Record<string, { x: number; y: number }>, focus: string | null = null) {
+  const w = Math.max(380, width), h = Math.max(480, height);
+  const chosen = nodes.filter(node => node.kind === 'chosen'), n = chosen.length;
+  const top = n > 2 ? Math.min(n > 4 ? 270 : 230, h * .36) : h * .5, bottom = h - 185;
+  const cx = w / 2, cy = (top + bottom) / 2;
+  chosen.forEach((node, i) => {
+    if (n === 2) { node.x = w * (i === 0 ? .21 : .79); node.y = h * .5; }
+    else if (n === 3) { const span = Math.min(w * .68, (bottom - top) * 1.5); node.x = [cx, cx - span / 2, cx + span / 2][i]; node.y = [top, bottom, bottom][i]; }
+    else if (n === 4) { const side = Math.min(w * .62, bottom - top); node.x = [cx - side / 2, cx + side / 2, cx + side / 2, cx - side / 2][i]; node.y = [top, top, top + side, top + side][i]; }
+    else { const angle = -Math.PI / 2 + i * 2 * Math.PI / n; node.x = cx + Math.cos(angle) * w * .34; node.y = cy + Math.sin(angle) * (bottom - top) / 2; }
+    if (pinned[node.id]) { node.x = pinned[node.id].x * w; node.y = pinned[node.id].y * h; }
   });
-  const map = new Map(nodes.map(n => [n.id, n]));
-  const bridges = nodes.filter(n => n.kind !== 'chosen');
-  bridges.forEach((n, i) => {
-    const targets = [...n.linksTo].map(id => map.get(id)!).filter(Boolean);
-    n.x = targets.reduce((sum, t) => sum + t.x, 0) / (targets.length || 1);
-    n.y = targets.reduce((sum, t) => sum + t.y, 0) / (targets.length || 1);
-    if (chosen.length === 2) {
-      const offset = i === 0 ? 0 : Math.ceil(i / 2) * (i % 2 ? -1 : 1);
-      n.y += offset * Math.min(110, (h - 220) / Math.max(1, bridges.length - 1));
-      if (n.kind === 'overflow') n.y = h - 105;
-    } else { n.x += Math.cos(i * 2.4) * 60; n.y += Math.sin(i * 2.4) * 60; }
-  });
-  // Longer routes read left to right instead of stacking every intermediate at the centroid.
-  for (const pair of new Set(edges.filter(e => e.deep).map(e => e.pair))) {
-    const chain = edges.filter(e => e.deep && e.pair === pair);
-    const first = map.get(chain[0].a)!, last = map.get(chain[chain.length - 1].b)!;
-    chain.slice(0, -1).forEach((edge, i) => {
-      const node = map.get(edge.b)!;
-      if (node.kind === 'chosen') return;
-      const t = (i + 1) / chain.length;
-      node.x = first.x + (last.x - first.x) * t;
-      node.y = first.y + (last.y - first.y) * t - Math.sin(t * Math.PI) * 80;
-    });
+  const map = new Map(nodes.map(node => [node.id, node]));
+  const hubs = nodes.filter(node => node.kind === 'hub');
+  hubs.forEach((node, i) => { node.x = cx + (i - (hubs.length - 1) / 2) * 110; node.y = cy; });
+  for (const pair of new Set(nodes.filter(node => node.pair && node.kind !== 'chosen' && node.kind !== 'hub').map(node => node.pair!))) {
+    const corridor = nodes.filter(node => node.pair === pair && node.kind !== 'chosen' && node.kind !== 'hub');
+    const pairEdges = edges.filter(edge => edge.pairs.includes(pair));
+    const deep = pairEdges.filter(e => e.deep);
+    const anchors = (deep.length ? [deep[0].a, deep[deep.length - 1].b] : pair.split(':')).map(id => map.get(id)!).filter(Boolean);
+    if (anchors.length < 2) continue;
+    const [a, b] = anchors, dx = b.x - a.x, dy = b.y - a.y, distance = Math.hypot(dx, dy) || 1;
+    let nx = -dy / distance, ny = dx / distance;
+    if (nx * ((a.x + b.x) / 2 - cx) + ny * ((a.y + b.y) / 2 - cy) < 0) { nx = -nx; ny = -ny; }
+    const bridges = corridor.filter(node => node.kind === 'bridge'), overflow = corridor.find(node => node.kind === 'overflow');
+    if (n === 2 && !pairEdges.some(e => e.deep)) {
+      bridges.forEach((node, i) => { node.x = cx; node.y = cy + (i - (bridges.length - 1) / 2) * Math.min(100, (h - 260) / Math.max(1, bridges.length)); });
+      if (overflow) { overflow.x = cx; overflow.y = h - 115; }
+    } else {
+      // Opposite corners use an outer arc, leaving the center exclusively for hubs.
+      const diagonal = n >= 4 && Math.hypot((a.x + b.x) / 2 - cx, (a.y + b.y) / 2 - cy) < 50;
+      const bow = diagonal ? Math.min(140, distance * .23) : n === 2 ? -65 : pair === focus ? 48 : 30;
+      bridges.forEach((node, i) => { const t = (i + 1) / (bridges.length + 1); node.x = a.x + dx * t + nx * bow * Math.sin(Math.PI * t); node.y = a.y + dy * t + ny * bow * Math.sin(Math.PI * t); });
+      if (overflow) { overflow.x = (a.x + b.x) / 2 + nx * (bow + (diagonal ? 25 : 78)); overflow.y = (a.y + b.y) / 2 + ny * (bow + (diagonal ? 25 : 78)); }
+    }
   }
-  const targets = new Map(nodes.map(n => [n.id, { x: n.x, y: n.y }]));
-  for (const n of nodes) if (pinned[n.id]) { n.fx = Math.max(75, Math.min(w - 75, pinned[n.id].x * w)); n.fy = Math.max(100, Math.min(h - 110, pinned[n.id].y * h)); }
-  const simulation = forceSimulation(nodes).stop()
-    .force('link', forceLink<Node, { source: string; target: string }>(edges.map(e => ({ source: e.a, target: e.b }))).id(n => n.id).distance(chosen.length === 2 ? w * .23 : Math.min(w, h) * .29).strength(.18))
-    .force('charge', forceManyBody().strength(n => (n as Node).kind === 'chosen' ? -950 : -150))
-    .force('collision', forceCollide<Node>().radius(n => n.radius + (n.kind === 'chosen' ? 24 : bridges.length > 7 ? 38 : 18)).iterations(5))
-    .force('x', forceX<Node>(n => targets.get(n.id)!.x).strength(n => n.kind === 'chosen' ? .65 : .22))
-    .force('y', forceY<Node>(n => targets.get(n.id)!.y).strength(n => n.kind === 'chosen' ? .65 : .25));
-  for (let i = 0; i < 160; i++) simulation.tick();
-  for (const n of nodes) { n.x = Math.max(n.radius + 30, Math.min(w - n.radius - 30, n.x)); n.y = Math.max(n.radius + 70, Math.min(h - n.radius - 80, n.y)); }
+  for (const node of nodes) {
+    if (node.kind !== 'chosen' && pinned[node.id]) { node.x = pinned[node.id].x * w; node.y = pinned[node.id].y * h; }
+    node.x = Math.max(node.radius + 25, Math.min(w - node.radius - 25, node.x));
+    node.y = Math.max(node.radius + (n > 2 ? 135 : 65), Math.min(h - node.radius - 60, node.y));
+  }
   return nodes;
 }

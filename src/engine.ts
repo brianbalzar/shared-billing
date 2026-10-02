@@ -68,7 +68,12 @@ export class CreditEngine {
     if (na.has(b)) { result.direct = this.evidence(a, b); result.people = 0; return result; }
     if (!depth) return result;
     const nb = this.neighbors(b);
-    const bridges = [...na.keys()].filter(i => nb.has(i)).sort((x, y) => (na.get(y)!.length + nb.get(y)!.length) - (na.get(x)!.length + nb.get(x)!.length) || this.counts[y] - this.counts[x] || this.actor(x).name.localeCompare(this.actor(y).name));
+    const strength = (i: number) => {
+      const left = na.get(i)!, right = nb.get(i)!;
+      const quality = (fs: number[]) => Math.max(...fs.map(f => this.data.films[f][4] * Math.log10(this.data.films[f][3])));
+      return Math.min(left.length, right.length) * 4 + left.length + right.length + (quality(left) + quality(right)) / 100;
+    };
+    const bridges = [...na.keys()].filter(i => nb.has(i)).sort((x, y) => strength(y) - strength(x) || this.actor(x).name.localeCompare(this.actor(y).name));
     if (bridges.length) { result.bridges = bridges.map(i => this.route([a, i, b])); result.totalRoutes = bridges.length; result.people = 1; return result; }
     if (depth === 1) return result;
     // BFS records every shortest predecessor, counting actor chains rather than duplicate film combinations.

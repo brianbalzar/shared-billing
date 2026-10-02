@@ -1,6 +1,6 @@
 # Shared Billing
 
-A desktop-first movie co-star explorer, built with React, TypeScript, SVG, and a settled d3-force layout. Search for 2–6 actors and inspect the real film credits behind direct links, co-stars, and deeper shortest routes. Light and dark themes, keyboard search, overflow lists, film filters, and drag-to-pin layouts are included.
+A desktop-first movie co-star explorer, built with React, TypeScript, SVG, and a composed corridor layout. Search for 2–6 actors and inspect the real film credits behind direct links, co-stars, and deeper shortest routes. Light and dark themes, keyboard search, overflow lists, film filters, and drag-to-pin layouts are included.
 
 Each fresh visit or reload opens on the landing page with two distinct random actors recommended from the default Popular films dataset. The recommendation stays on the landing page until you click Try it; you can also search for your own actors.
 
@@ -55,6 +55,12 @@ The base URL is `/shared-billing/`. In repository **Settings → Pages → Build
 
 ## Design
 
-The supplied handoff is preserved under `reference/design_handoff_shared_billing/`. `src/tokens.css` contains the supplied tokens with the refined chosen-actor portrait treatment: a 96px face-biased image, 4px warm-ivory spacer, 3px coral border, and restrained hard shadow. Chosen actors retain full-opacity portraits during route selection. Bridges use sepia initials; hubs reveal a portrait only when explicitly selected. Search candidates and overflow rows use initials. Static design examples are references, not production search results. Graph positions come from a deterministic force simulation run to convergence, then stopped. Users can drag nodes to pin their positions and release all pins with Reset layout.
+The supplied handoff is preserved under `reference/design_handoff_shared_billing/`. `src/tokens.css` contains the supplied tokens with the refined chosen-actor portrait treatment: a 96px face-biased image, 4px warm-ivory spacer, 3px coral border, and restrained hard shadow. Chosen actors retain full-opacity portraits during route selection. Bridges, dense-view hubs, search candidates, and overflow rows use sepia initials. Static design examples are references, not production search results.
+
+Selected actors are fixed anchors: three form a triangle, four form a square, and five or six form a polygon. Ordinary intermediates are owned by a pair and placed along its outer corridor. Only co-stars connected to at least three selected actors receive central hub treatment; this is calculated from all available one-person connections, rather than only the visible subset. At most two hubs are shown at once.
+
+The default is three bridges per pair; a focused corridor can show up to four, with quieter three-actor corridors showing up to two each. Three-actor maps never exceed ten intermediates. Four-to-six-actor maps display intermediates for the focused pair only, leaving the other pairs available in compact controls. Explicit overflow choices replace lower-ranked intermediates instead of exceeding the dense-view cap. Two-actor views can still expand the whole list.
+
+Routes are ranked by balanced shared-credit strength on both sides, total shared credits, and IMDb rating/vote quality. Film labels are hidden when more than two actors or four intermediates are visible, except on hover, keyboard focus, or a selected direct link/indirect route. Evidence remains available in the side panel. Users can drag nodes to pin their positions and release all pins with Reset layout; layout and pair-focus changes never move an anchor within the same canvas dimensions.
 
 Modern browsers with Web Workers and DecompressionStream are required. The first visit downloads approximately 9 MB of compressed credits; later requests operate locally. The layout is designed for desktop; small-screen refinement is a future improvement.
