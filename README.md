@@ -2,7 +2,7 @@
 
 A desktop-first movie co-star explorer, built with React, TypeScript, SVG, and a settled d3-force layout. Search for 2–6 actors and inspect the real film credits behind direct links, co-stars, and deeper shortest routes. Light and dark themes, keyboard search, overflow lists, film filters, and drag-to-pin layouts are included.
 
-Each fresh visit or reload opens with two distinct random actors who have credits in the default Popular films dataset. Remove actors to start your own search; the manual Hanks–Hepburn example remains available in the empty state.
+Each fresh visit or reload opens on the landing page with two distinct random actors recommended from the default Popular films dataset. The recommendation stays on the landing page until you click Try it; you can also search for your own actors.
 
 ## Development
 

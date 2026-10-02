@@ -1,4 +1,4 @@
-import { clearActors } from './browser-start.mjs';
+import { clearActors, loadExample } from './browser-start.mjs';
 import { chromium } from '@playwright/test';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
@@ -16,7 +16,7 @@ await page.getByRole('heading', { name: 'Setsuko Hara and Ziggy Marley' }).waitF
 await page.keyboard.press('Escape');
 await page.reload();
 await clearActors(page);
-await page.getByRole('button', { name: 'Try it', exact: true }).click();
+await loadExample(page);
 await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
 await add('Billy Crystal'); await add('Kevin Bacon');
 await page.locator('.hub .node-button').first().waitFor();

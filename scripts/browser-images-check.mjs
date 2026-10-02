@@ -1,4 +1,4 @@
-import { clearActors } from './browser-start.mjs';
+import { clearActors, loadExample } from './browser-start.mjs';
 import { chromium } from '@playwright/test';
 const browser = await chromium.launch();
 try {
@@ -6,7 +6,7 @@ try {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto(process.argv[2] || 'https://brianbalzar.github.io/shared-billing/');
   await clearActors(page);
-  await page.getByRole('button', { name: 'Try it', exact: true }).click();
+  await loadExample(page);
   await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
   await page.waitForFunction(() => {
     const images = [...document.querySelectorAll('.chosen .node-button img')];

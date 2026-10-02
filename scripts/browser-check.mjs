@@ -1,4 +1,4 @@
-import { clearActors } from './browser-start.mjs';
+import { clearActors, loadExample } from './browser-start.mjs';
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 await mkdir('qa', { recursive: true });
@@ -9,7 +9,7 @@ await page.goto('http://127.0.0.1:5173/shared-billing/');
 await clearActors(page);
 await page.waitForFunction(() => !document.querySelector('.example-card button')?.disabled, { timeout: 30000 });
 await page.screenshot({ path: 'qa/empty.png' });
-await page.getByRole('button', { name: 'Try it', exact: true }).click();
+await loadExample(page);
 await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
 await page.screenshot({ path: 'qa/bridges.png' });
 await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).click();
