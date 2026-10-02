@@ -1,4 +1,5 @@
 import type { Actor, Dataset, Evidence, FilmSet, Graph, Pair, Route } from './types';
+import { recommendedActors } from './recommendations';
 export class CreditEngine {
   private ids = new Map<string, number>();
   private credits: number[][];
@@ -24,7 +25,7 @@ export class CreditEngine {
   }
   randomActors(set: FilmSet): Actor[] {
     this.filter(set);
-    const eligible = this.counts.map((count, i) => count > 0 ? i : -1).filter(i => i >= 0);
+    const eligible = this.counts.map((count, i) => count > 0 && recommendedActors.has(this.data.actors[i][1]) ? i : -1).filter(i => i >= 0);
     const actors: Actor[] = [];
     while (actors.length < 2 && eligible.length) {
       const index = Math.floor(Math.random() * eligible.length);
