@@ -22,6 +22,18 @@ export class CreditEngine {
     const [id, name, birth, known] = this.data.actors[i];
     return { id, name, birth, known, count: this.counts[i] };
   }
+  randomActors(set: FilmSet): Actor[] {
+    this.filter(set);
+    const eligible = this.counts.map((count, i) => count > 0 ? i : -1).filter(i => i >= 0);
+    const actors: Actor[] = [];
+    while (actors.length < 2 && eligible.length) {
+      const index = Math.floor(Math.random() * eligible.length);
+      actors.push(this.actor(eligible[index]));
+      eligible[index] = eligible[eligible.length - 1];
+      eligible.pop();
+    }
+    return actors;
+  }
   search(query: string, excluded: string[], set: FilmSet): Actor[] {
     this.filter(set);
     const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

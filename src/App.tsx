@@ -121,7 +121,7 @@ export default function App() {
   const canvas = useRef<HTMLDivElement>(null), settingsRef = useRef<HTMLDivElement>(null), request = useRef(0), loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const w = new Worker(new URL('./credits.worker.ts', import.meta.url), { type: 'module' }); setWorker(w);
-    w.onmessage = ({ data }) => { if (data.type === 'ready') setMetadata(data.metadata); if (data.type === 'error') { if (loadingTimer.current) clearTimeout(loadingTimer.current); setError(data.message); setLoading(false); } if (data.type === 'graph' && data.id === request.current) { if (loadingTimer.current) clearTimeout(loadingTimer.current); setGraph(data.graph); setLoading(false); setError(''); } };
+    w.onmessage = ({ data }) => { if (data.type === 'ready') { setChosen(data.actors); setMetadata(data.metadata); } if (data.type === 'error') { if (loadingTimer.current) clearTimeout(loadingTimer.current); setError(data.message); setLoading(false); } if (data.type === 'graph' && data.id === request.current) { if (loadingTimer.current) clearTimeout(loadingTimer.current); setGraph(data.graph); setLoading(false); setError(''); } };
     w.onerror = () => { setError('Movie credits could not load. Please reload and try again.'); setLoading(false); };
     fetch(`${import.meta.env.BASE_URL}data/images.json`).then(r => r.ok ? r.json() : null).then(data => { if (data) setImages(data); }).catch(() => {});
     return () => w.terminate();

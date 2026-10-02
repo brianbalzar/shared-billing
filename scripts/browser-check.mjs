@@ -1,3 +1,4 @@
+import { clearActors } from './browser-start.mjs';
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 await mkdir('qa', { recursive: true });
@@ -5,7 +6,7 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 const errors = []; page.on('pageerror', e => errors.push(e.message));
 await page.goto('http://127.0.0.1:5173/shared-billing/');
-await page.getByRole('button', { name: 'Try it', exact: true }).waitFor();
+await clearActors(page);
 await page.waitForFunction(() => !document.querySelector('.example-card button')?.disabled, { timeout: 30000 });
 await page.screenshot({ path: 'qa/empty.png' });
 await page.getByRole('button', { name: 'Try it', exact: true }).click();

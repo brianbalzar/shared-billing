@@ -1,8 +1,9 @@
+import { clearActors } from './browser-start.mjs';
 import { chromium } from '@playwright/test';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 await page.goto('http://127.0.0.1:5173/shared-billing/');
-await page.waitForFunction(() => !document.querySelector('.example-card button')?.disabled);
+await clearActors(page);
 async function add(name) { const search = page.getByRole('combobox'); await search.fill(name); await page.getByRole('option').filter({ hasText: name }).first().waitFor(); await search.press('Enter'); }
 await add('Setsuko Hara'); await add('Ziggy Marley');
 await page.getByRole('heading', { name: 'No connection at this depth.' }).waitFor();
@@ -14,7 +15,7 @@ await page.getByRole('button', { name: /Route 2 of 7/ }).waitFor();
 await page.getByRole('heading', { name: 'Setsuko Hara and Ziggy Marley' }).waitFor();
 await page.keyboard.press('Escape');
 await page.reload();
-await page.waitForFunction(() => !document.querySelector('.example-card button')?.disabled);
+await clearActors(page);
 await page.getByRole('button', { name: 'Try it', exact: true }).click();
 await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
 await add('Billy Crystal'); await add('Kevin Bacon');

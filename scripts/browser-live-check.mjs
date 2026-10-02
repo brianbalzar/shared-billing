@@ -4,12 +4,11 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, red
 const errors = []; page.on('pageerror', e => errors.push(e.message));
 const response = await page.goto(process.argv[2] || 'https://brianbalzar.github.io/shared-billing/');
 if (!response?.ok()) throw new Error(`Site returned ${response?.status()}`);
-await page.waitForFunction(() => !document.querySelector('.example-card button')?.disabled, null, { timeout: 60000 });
-await page.getByRole('button', { name: 'Try it', exact: true }).click();
-await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).waitFor();
-await page.getByRole('button', { name: 'John Goodman, show linking films. Drag to pin.', exact: true }).click();
-await page.getByRole('link', { name: 'Always', exact: true }).waitFor();
+await page.waitForFunction(() => document.querySelectorAll('.chosen').length === 2, null, { timeout: 60000 });
+const names = await page.locator('.chosen .node-name').allTextContents();
+if (new Set(names).size !== 2) throw new Error('Startup actors must be distinct');
+await page.waitForFunction(() => document.querySelector('.link-hit') || document.querySelector('.no-connection'));
 await page.screenshot({ path: 'qa/live.png' });
 if (errors.length) throw new Error(errors.join('\n'));
-console.log('Live production site, compressed dataset, example graph, and film evidence verified.');
+console.log('Live production site, compressed dataset, and random actor startup verified:', names.join(' + '));
 await browser.close();
