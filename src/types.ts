@@ -7,4 +7,4 @@ export interface Pair { id: string; a: Actor; b: Actor; direct: Evidence | null;
 export interface Graph { actors: Actor[]; pairs: Pair[] }
 export interface Metadata { generated: string; actors: number; films: number; counts: Record<FilmSet, number>; minVotes: Record<FilmSet, number> }
 export interface Dataset { metadata: Metadata; actors: [string, string, number | null, string, number][]; films: [string, string, number | null, number, number, [number, string][]][] }
-export type Selection = { kind: 'direct' | 'overflow' | 'route'; pair: string } | { kind: 'bridge'; pair: string; actor: string };
+export type Selection = { kind: 'direct' | 'overflow'; pair: string } | { kind: 'route'; pair: string; actor?: string } | { kind: 'bridge'; pair: string; actor: string };

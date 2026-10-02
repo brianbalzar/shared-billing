@@ -53,6 +53,6 @@ The base URL is `/shared-billing/`. In repository **Settings → Pages → Build
 
 ## Design
 
-The supplied handoff is preserved under `reference/design_handoff_shared_billing/`. `src/tokens.css` is the original token file. Static design examples are references, not production search results. Graph positions come from a deterministic force simulation run to convergence, then stopped. Users can drag nodes to pin their positions and release all pins with Reset layout.
+The supplied handoff is preserved under `reference/design_handoff_shared_billing/`. `src/tokens.css` contains the supplied tokens with the refined chosen-actor portrait treatment: a 96px face-biased image, 4px warm-ivory spacer, 3px coral border, and restrained hard shadow. Chosen actors retain full-opacity portraits during route selection. Bridges use sepia initials; hubs reveal a portrait only when explicitly selected. Search candidates and overflow rows use initials. Static design examples are references, not production search results. Graph positions come from a deterministic force simulation run to convergence, then stopped. Users can drag nodes to pin their positions and release all pins with Reset layout.
 
 Modern browsers with Web Workers and DecompressionStream are required. The first visit downloads approximately 9 MB of compressed credits; later requests operate locally. The layout is designed for desktop; small-screen refinement is a future improvement.

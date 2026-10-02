@@ -35,7 +35,8 @@
   --color-border-active: #1A1410;    /* active/focused inputs, important panels */
 
   /* Shadows */
-  --shadow-selected: 5px 5px 0 #1A1410;   /* chosen actors */
+  --shadow-selected: 4px 4px 0 #1A1410;   /* chosen actors */
+  --color-portrait-spacer: #FFF8EE;
   --shadow-panel: 6px 6px 0 #1A1410;      /* important panels: example card, no-connection */
   --shadow-popover: 0 8px 24px rgba(26,20,16,.10); /* typeahead, settings */
 }
@@ -61,7 +62,7 @@
   --color-border: #33281F;
   --color-border-strong: #4F3F33;
   --color-border-active: #FFF8EE;
-  --shadow-selected: 5px 5px 0 #5A1F10;
+  --shadow-selected: 4px 4px 0 #080604;
   --shadow-panel: 6px 6px 0 #000000;
   --shadow-popover: 0 8px 24px rgba(0,0,0,.5);
 }
@@ -105,7 +106,8 @@
   --size-panel: 440px;
 
   /* Nodes (diameter) */
-  --size-node-chosen: 112px;
+  --size-node-chosen: 110px; /* 96px portrait + 4px spacer + 3px border on each side */
+  --size-portrait-chosen: 96px;
   --size-node-add: 112px;    /* 2px dashed --color-text-disabled */
   --size-node-hub: 72px;     /* ring: 4px canvas gap + 2px --color-text-muted */
   --size-node-bridge: 56px;

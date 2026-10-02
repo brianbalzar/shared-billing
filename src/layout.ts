@@ -5,7 +5,7 @@ export interface Node extends SimulationNodeDatum { id: string; actor?: Actor; k
 export interface Edge { id: string; a: string; b: string; pair: string; kind: 'direct' | 'bridge' | 'overflow'; routeActor?: string; title: string; count: number; deep: boolean }
 export function makeGraph(graph: Graph, shown: number, expanded: Record<string, string[]>) {
   const nodes = new Map<string, Node>(), edges: Edge[] = [];
-  const add = (a: Actor, chosen = false) => { if (!nodes.has(a.id)) nodes.set(a.id, { id: a.id, actor: a, kind: chosen ? 'chosen' : 'bridge', linksTo: new Set(), x: 0, y: 0, radius: chosen ? 56 : 28 }); };
+  const add = (a: Actor, chosen = false) => { if (!nodes.has(a.id)) nodes.set(a.id, { id: a.id, actor: a, kind: chosen ? 'chosen' : 'bridge', linksTo: new Set(), x: 0, y: 0, radius: chosen ? 55 : 28 }); };
   graph.actors.forEach(a => add(a, true));
   for (const pair of graph.pairs) {
     if (pair.direct) edges.push({ id: `direct:${pair.id}`, a: pair.a.id, b: pair.b.id, pair: pair.id, kind: 'direct', title: pair.direct.films.length === 1 ? pair.direct.films[0].title : `${pair.direct.films.length} shared films`, count: pair.direct.films.length, deep: false });
