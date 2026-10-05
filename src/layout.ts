@@ -112,7 +112,7 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
     if (pinned[node.id]) { node.x = pinned[node.id].x * w; node.y = pinned[node.id].y * h; }
   });
   const map = new Map(nodes.map(node => [node.id, node]));
-  const hubs = nodes.filter(node => node.kind === 'hub');
+  const hubs = nodes.filter(node => node.kind === 'hub'), spots: { node: Node; normal: Point; tangent: Point }[] = [];
   hubs.forEach((node, i) => { node.x = cx + (i - (hubs.length - 1) / 2) * 110; node.y = cy; });
   for (const pair of new Set(nodes.filter(node => node.pair && node.kind !== 'chosen' && node.kind !== 'hub').map(node => node.pair!))) {
     const corridor = nodes.filter(node => node.pair === pair && node.kind !== 'chosen' && node.kind !== 'hub');
@@ -135,13 +135,20 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
       const diagonal = n >= 4 && Math.hypot((a.x + b.x) / 2 - cx, (a.y + b.y) / 2 - cy) < 50;
       const bow = diagonal ? Math.min(140, distance * .23) : n === 2 ? -65 : pair === focus ? 48 : 30;
       bridges.forEach((node, i) => { const t = (i + 1) / (bridges.length + 1); node.x = a.x + dx * t + nx * bow * Math.sin(Math.PI * t); node.y = a.y + dy * t + ny * bow * Math.sin(Math.PI * t); });
-      if (overflow) { overflow.x = (a.x + b.x) / 2 + nx * (bow + (diagonal ? 25 : 78)); overflow.y = (a.y + b.y) / 2 + ny * (bow + (diagonal ? 25 : 78)); }
+      if (overflow) { overflow.x = (a.x + b.x) / 2 + nx * (bow + (diagonal ? 25 : 78)); overflow.y = (a.y + b.y) / 2 + ny * (bow + (diagonal ? 25 : 78)); spots.push({ node: overflow, normal: { x: nx, y: ny }, tangent: { x: dx / distance, y: dy / distance } }); }
     }
   }
   for (const node of nodes) {
     if (node.kind !== 'chosen' && pinned[node.id]) { node.x = pinned[node.id].x * w; node.y = pinned[node.id].y * h; }
     node.x = Math.max(node.radius + 25, Math.min(w - node.radius - 25, node.x));
     node.y = Math.max(node.radius + (n > 2 ? 175 : 65), Math.min(h - node.radius - 60, node.y));
+  }
+  // The default spot can land on a co-star's name (the bottom pair has no room below its bridges), so nudge each pill clear.
+  const fixed = nodeObstacles(nodes.filter(node => node.kind !== 'overflow'));
+  for (const { node, normal, tangent } of spots) {
+    const bounds = { x: node.radius + 25, y: node.radius + (n > 2 ? 175 : 65), w: w - 2 * (node.radius + 25), h: h - 60 - 2 * node.radius - (n > 2 ? 175 : 65) };
+    Object.assign(node, clearOverflow(node, normal, tangent, fixed, bounds));
+    fixed.push(...nodeObstacles([node]));
   }
   return nodes;
 }
@@ -156,6 +163,20 @@ export interface LabelPlacement { x: number; y: number; width: number; fullWidth
 export const LABEL_HEIGHT = 24, LABEL_MAX = 240, LABEL_HOVER_MAX = 420;
 export const labelWidth = (text: string, bold = false) => Math.ceil(text.length * (bold ? 6.9 : 6.3) + 20);
 export const quadPoint = (s: Point, c: Point, e: Point, t: number): Point => ({ x: (1 - t) ** 2 * s.x + 2 * (1 - t) * t * c.x + t ** 2 * e.x, y: (1 - t) ** 2 * s.y + 2 * (1 - t) * t * c.y + t ** 2 * e.y });
+// Scans out from a pill's default spot (along the corridor normal and tangent) for the nearest position
+// that clears every obstacle and stays inside `bounds` (the range its centre may take); falls back to the default.
+export function clearOverflow(spot: Point, normal: Point, tangent: Point, obstacles: Box[], bounds: Box): Point {
+  const steps = [0, 50, -50, 100, -100, 150, -150, 200, -200, 250, -250, 300, -300];
+  let best = { x: spot.x, y: spot.y }, bestScore = Infinity;
+  for (const dn of steps) for (const dt of steps) {
+    const x = spot.x + normal.x * dn + tangent.x * dt, y = spot.y + normal.y * dn + tangent.y * dt;
+    if (x < bounds.x || x > bounds.x + bounds.w || y < bounds.y || y > bounds.y + bounds.h) continue;
+    const box = { x: x - 61, y: y - 24, w: 122, h: 48 };
+    const score = obstacles.reduce((sum, other) => sum + overlap(box, other), 0) * 10 + Math.hypot(dn, dt);
+    if (score < bestScore) { best = { x, y }; bestScore = score; }
+  }
+  return best;
+}
 export function nodeObstacles(nodes: Node[]): Box[] {
   const boxes: Box[] = [];
   for (const node of nodes) {

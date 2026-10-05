@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeGraph, settle, strongestPair, describeResult } from '../src/layout.ts';
+import { makeGraph, settle, strongestPair, describeResult, nodeObstacles } from '../src/layout.ts';
 import type { Actor, Graph, Pair, Route } from '../src/types.ts';
 const actor = (id: string): Actor => ({ id, name: id, birth: null, known: '', count: 1 });
 const route = (a: Actor, b: Actor, bridge: Actor): Route => ({ actors: [a, bridge, b], links: [[a, bridge], [bridge, b]].map(([a, b]) => ({ a: a.id, b: b.id, films: [{ id: `${a.id}${b.id}`, title: 'Evidence', year: 2000, votes: 20000, rating: 7, roles: {} }] })) });
@@ -64,4 +64,18 @@ test('result headline names the strongest kind of connection and the sub-line co
   assert.equal(describe(pair({}), 2).headline, 'No connection within 2 people in between');
   const three = fixture(3);
   assert.equal(describeResult(three, 'Popular films', 1, {}, null).headline, 'All 3 pairs are connected');
+});
+test('"+N more" buttons clear every co-star name and stay on the canvas in the three-actor view', () => {
+  const graph = fixture(3), hit = (a: { x: number; y: number; w: number; h: number }, b: typeof a) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  for (const [w, h] of [[1440, 836], [1280, 720], [1000, 836], [820, 640]]) for (const pair of graph.pairs) {
+    const display = makeGraph(graph, 3, {}, pair.id), nodes = settle(display.nodes, display.edges, w, h, {}, pair.id);
+    const overflows = nodes.filter(n => n.kind === 'overflow'), others = nodes.filter(n => n.kind !== 'overflow');
+    assert.ok(overflows.length > 0);
+    for (const o of overflows) {
+      const box = { x: o.x - 55, y: o.y - 18, w: 110, h: 36 };
+      assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.w <= w && box.y + box.h <= h, `${o.id} stays on the ${w}x${h} canvas`);
+      for (const obstacle of nodeObstacles(others)) assert.ok(!hit(box, obstacle), `${o.id} overlaps a node or name at ${w}x${h}, focus ${pair.id}`);
+      for (const other of overflows.filter(x => x !== o)) assert.ok(!hit(box, { x: other.x - 55, y: other.y - 18, w: 110, h: 36 }), 'overflow buttons do not overlap each other');
+    }
+  }
 });
