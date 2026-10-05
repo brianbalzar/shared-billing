@@ -83,7 +83,9 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
   const top = n > 2 ? Math.min(n > 4 ? 270 : 230, h * .36) : h * .5, bottom = h - 185;
   const cx = w / 2, cy = (top + bottom) / 2;
   chosen.forEach((node, i) => {
-    if (n === 2) { node.x = w * (i === 0 ? .21 : .79); node.y = h * .5; }
+    // Two-actor anchors slide outward as the canvas narrows (e.g. when the details panel opens),
+    // so the corridor between them keeps room for bridge names and film labels.
+    if (n === 2) { const inset = .13 + .08 * Math.max(0, Math.min(1, (w - 700) / 400)); node.x = w * (i === 0 ? inset : 1 - inset); node.y = h * .5; }
     else if (n === 3) { const span = Math.min(w * .68, (bottom - top) * 1.5); node.x = [cx, cx - span / 2, cx + span / 2][i]; node.y = [top, bottom, bottom][i]; }
     else if (n === 4) { const side = Math.min(w * .62, bottom - top); node.x = [cx - side / 2, cx + side / 2, cx + side / 2, cx - side / 2][i]; node.y = [top, top, top + side, top + side][i]; }
     else { const angle = -Math.PI / 2 + i * 2 * Math.PI / n; node.x = cx + Math.cos(angle) * w * .34; node.y = cy + Math.sin(angle) * (bottom - top) / 2; }
@@ -103,7 +105,10 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
     if (nx * ((a.x + b.x) / 2 - cx) + ny * ((a.y + b.y) / 2 - cy) < 0) { nx = -nx; ny = -ny; }
     const bridges = corridor.filter(node => node.kind === 'bridge'), overflow = corridor.find(node => node.kind === 'overflow');
     if (n === 2 && !pairEdges.some(e => e.deep)) {
-      bridges.forEach((node, i) => { node.x = cx; node.y = cy + (i - (bridges.length - 1) / 2) * Math.min(100, (h - 260) / Math.max(1, bridges.length)); });
+      // Centre the stack on the anchors and use the vertical room, but keep the last name clear of "+N more".
+      const step = Math.min(125, (h - 260) / Math.max(1, bridges.length)), span = (bridges.length - 1) * step;
+      const lowest = overflow ? h - 115 - 21 - 64 : h - 120, middle = Math.max(110 + span / 2, Math.min(h * .5, lowest - span / 2));
+      bridges.forEach((node, i) => { node.x = cx; node.y = middle + (i - (bridges.length - 1) / 2) * step; });
       if (overflow) { overflow.x = cx; overflow.y = h - 115; }
     } else {
       // Opposite corners use an outer arc, leaving the center exclusively for hubs.
@@ -119,4 +124,47 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
     node.y = Math.max(node.radius + (n > 2 ? 135 : 65), Math.min(h - node.radius - 60, node.y));
   }
   return nodes;
+}
+
+// ---- Film-label placement -------------------------------------------------------------------
+// Labels are positioned along their curve, avoiding node bubbles, actor names and each other.
+// Widths are estimated from text length so this stays pure and testable outside the browser.
+export interface Point { x: number; y: number }
+export interface Box { x: number; y: number; w: number; h: number }
+export interface LabelRequest { id: string; title: string; start: Point; control: Point; end: Point; bold?: boolean }
+export interface LabelPlacement { x: number; y: number; width: number; fullWidth: number; truncated: boolean }
+export const LABEL_HEIGHT = 24, LABEL_MAX = 240, LABEL_HOVER_MAX = 420;
+export const labelWidth = (text: string, bold = false) => Math.ceil(text.length * (bold ? 6.9 : 6.3) + 20);
+export const quadPoint = (s: Point, c: Point, e: Point, t: number): Point => ({ x: (1 - t) ** 2 * s.x + 2 * (1 - t) * t * c.x + t ** 2 * e.x, y: (1 - t) ** 2 * s.y + 2 * (1 - t) * t * c.y + t ** 2 * e.y });
+export function nodeObstacles(nodes: Node[]): Box[] {
+  const boxes: Box[] = [];
+  for (const node of nodes) {
+    if (node.kind === 'overflow') { boxes.push({ x: node.x - 55, y: node.y - 18, w: 110, h: 36 }); continue; }
+    boxes.push({ x: node.x - node.radius, y: node.y - node.radius, w: node.radius * 2, h: node.radius * 2 });
+    const name = node.actor?.name || '';
+    const perChar = node.kind === 'chosen' ? 9.2 : node.kind === 'hub' ? 7.8 : 7.4, cap = node.kind === 'bridge' ? 130 : 180;
+    const width = Math.min(cap, name.length * perChar + 12), height = (node.kind === 'chosen' ? 22 : 19) + (node.kind === 'hub' ? 16 : 0);
+    boxes.push({ x: node.x - width / 2, y: node.y + node.radius + 6, w: width, h: height });
+  }
+  return boxes;
+}
+const overlap = (a: Box, b: Box) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+export function placeLabels(requests: LabelRequest[], obstacles: Box[]): Record<string, LabelPlacement> {
+  const placed: Record<string, LabelPlacement> = {}, taken = [...obstacles];
+  const offsets = [.5, .42, .58, .34, .66, .27, .73];
+  for (const request of requests) {
+    const fullWidth = labelWidth(request.title, request.bold);
+    const widths = [...new Set([Math.min(fullWidth, LABEL_MAX), Math.min(fullWidth, 150), Math.min(fullWidth, 104)])];
+    let best: { score: number; placement: LabelPlacement; box: Box } | null = null;
+    for (const width of widths) for (const t of offsets) {
+      const p = quadPoint(request.start, request.control, request.end, t);
+      const box = { x: p.x - width / 2, y: p.y - LABEL_HEIGHT / 2, w: width, h: LABEL_HEIGHT };
+      const collision = taken.reduce((sum, other) => sum + overlap(box, other), 0);
+      // Collisions dominate; then prefer the full title, then the curve midpoint.
+      const score = collision * 4 + (width < fullWidth ? 300 + (fullWidth - width) * 2 : 0) + Math.abs(t - .5) * 160;
+      if (!best || score < best.score) best = { score, box, placement: { x: p.x, y: p.y, width, fullWidth, truncated: width < fullWidth } };
+    }
+    if (best) { placed[request.id] = best.placement; taken.push(best.box); }
+  }
+  return placed;
 }

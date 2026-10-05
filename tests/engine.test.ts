@@ -39,3 +39,11 @@ test('film filters remove paths and accent-insensitive search respects chosen ac
   assert.equal(e.search('celine', ['nm2'], 'popular').length, 0);
   assert.equal(e.search('Bob', [], 'popular').length, 0);
 });
+test('search balances exact matches against prominence', async () => {
+  const { searchScore } = await import('../src/engine.ts');
+  // A one-film exact "Tom" must not outrank a prolific "Tom Hanks"; a typed full name still wins.
+  assert.ok(searchScore('tom hanks', 'tom', ['tom'], 60) > searchScore('tom', 'tom', ['tom'], 1));
+  assert.ok(searchScore('harrison ford', 'ford', ['ford'], 46) > searchScore('ford rainey', 'ford', ['ford'], 1));
+  assert.ok(searchScore('chris evans', 'chris evans', ['chris', 'evans'], 3) > searchScore('christina evansworth', 'chris evans', ['chris', 'evans'], 80));
+  assert.ok(searchScore('christopher lee', 'lee', ['lee'], 26) > searchScore('john cleese', 'lee', ['lee'], 44));
+});

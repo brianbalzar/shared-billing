@@ -1,5 +1,16 @@
 import type { Actor, Dataset, Evidence, FilmSet, Graph, Pair, Route } from './types';
 import { recommendedActors } from './recommendations';
+// Balances how well a name matches against how familiar the actor is. Film count is log-scaled so
+// an exact one-film "Tom" no longer outranks Tom Hanks, while a typed full name still wins outright.
+// Matches buried mid-word ("lee" in Cleese) rank below whole-word and word-prefix matches.
+export function searchScore(name: string, query: string, words: string[], films: number) {
+  const parts = name.split(/[\s\-.']+/).filter(Boolean);
+  let match = 0;
+  for (const word of words) match += parts.includes(word) ? 8 : parts.some(p => p.startsWith(word)) ? 4 : -12;
+  if (name.startsWith(query)) match += 4;
+  if (name === query) match += words.length > 1 ? 40 : 15;
+  return match + Math.log2(1 + films) * 10;
+}
 export class CreditEngine {
   private ids = new Map<string, number>();
   private credits: number[][];
@@ -40,9 +51,11 @@ export class CreditEngine {
     const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const q = normalize(query.trim());
     if (!q) return [];
+    const words = q.split(/\s+/);
     return this.data.actors.map((a, i) => ({ i, name: normalize(a[1]) }))
-      .filter(a => this.counts[a.i] && !excluded.includes(this.data.actors[a.i][0]) && q.split(/\s+/).every(word => a.name.includes(word)))
-      .sort((a, b) => Number(b.name === q) - Number(a.name === q) || Number(b.name.startsWith(q)) - Number(a.name.startsWith(q)) || this.counts[b.i] - this.counts[a.i])
+      .filter(a => this.counts[a.i] && !excluded.includes(this.data.actors[a.i][0]) && words.every(word => a.name.includes(word)))
+      .map(a => ({ ...a, score: searchScore(a.name, q, words, this.counts[a.i]) }))
+      .sort((a, b) => b.score - a.score || this.counts[b.i] - this.counts[a.i] || a.name.localeCompare(b.name))
       .slice(0, 12).map(a => this.actor(a.i));
   }
   private neighbors(i: number) {

@@ -36,3 +36,18 @@ test('four to six actors show intermediates and overflow only for the focused pa
     for (const node of display.nodes.filter(n => n.kind === 'bridge' || n.kind === 'overflow')) assert.equal(node.pair, focus);
   }
 });
+test('film labels avoid actor names and each other, and two-actor anchors widen on narrow canvases', async () => {
+  const { placeLabels, nodeObstacles } = await import('../src/layout.ts');
+  const bridge = { id: 'b', actor: actor('A very long bridge name'), kind: 'bridge' as const, pairs: [], linksTo: new Set<string>(), x: 300, y: 200, radius: 28 };
+  const obstacles = nodeObstacles([bridge]);
+  // A label whose midpoint would sit on the bridge's name gets moved along its curve instead.
+  const placed = placeLabels([{ id: 'e', title: 'Evidence', start: { x: 300, y: 245 }, control: { x: 300, y: 245 }, end: { x: 300, y: 400 } }], obstacles).e;
+  const name = obstacles[1];
+  assert.ok(placed.y - 12 >= name.y + name.h || placed.y + 12 <= name.y, 'label clears the actor name');
+  const pair = placeLabels(['one', 'two'].map(id => ({ id, title: 'Same spot', start: { x: 0, y: 0 }, control: { x: 100, y: 0 }, end: { x: 200, y: 0 } })), []);
+  assert.notEqual(pair.one.x, pair.two.x, 'second label shifts away from the first');
+  const two = fixture(2), display = makeGraph(two, 3, {});
+  const wide = settle(display.nodes.map(n => ({ ...n })), display.edges, 1440, 836, {}).filter(n => n.kind === 'chosen');
+  const narrow = settle(display.nodes.map(n => ({ ...n })), display.edges, 720, 836, {}).filter(n => n.kind === 'chosen');
+  assert.ok((narrow[1].x - narrow[0].x) / 720 > (wide[1].x - wide[0].x) / 1440);
+});
