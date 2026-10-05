@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeGraph, settle, strongestPair } from '../src/layout.ts';
+import { makeGraph, settle, strongestPair, describeResult } from '../src/layout.ts';
 import type { Actor, Graph, Pair, Route } from '../src/types.ts';
 const actor = (id: string): Actor => ({ id, name: id, birth: null, known: '', count: 1 });
 const route = (a: Actor, b: Actor, bridge: Actor): Route => ({ actors: [a, bridge, b], links: [[a, bridge], [bridge, b]].map(([a, b]) => ({ a: a.id, b: b.id, films: [{ id: `${a.id}${b.id}`, title: 'Evidence', year: 2000, votes: 20000, rating: 7, roles: {} }] })) });
@@ -50,4 +50,18 @@ test('film labels avoid actor names and each other, and two-actor anchors widen 
   const wide = settle(display.nodes.map(n => ({ ...n })), display.edges, 1440, 836, {}).filter(n => n.kind === 'chosen');
   const narrow = settle(display.nodes.map(n => ({ ...n })), display.edges, 720, 836, {}).filter(n => n.kind === 'chosen');
   assert.ok((narrow[1].x - narrow[0].x) / 720 > (wide[1].x - wide[0].x) / 1440);
+});
+test('result headline names the strongest kind of connection and the sub-line counts what is shown', () => {
+  const [a, b] = ['Ann', 'Bo'].map(actor), film = { id: 't', title: 'T', year: 2000, votes: 2e4, rating: 7, roles: {} };
+  const pair = (over: Partial<Pair>): Graph => ({ actors: [a, b], pairs: [{ id: 'p', a, b, direct: null, bridges: [], route: null, totalRoutes: 0, people: null, routeIndex: 0, ...over }] });
+  const describe = (g: Graph, depth = 1) => describeResult(g, 'Popular films', depth, { p: g.pairs[0].bridges.slice(0, 3).map(r => r.actors[1].id) }, null);
+  assert.equal(describe(pair({ direct: { a: 'Ann', b: 'Bo', films: [film, film, film] }, people: 0 })).headline, 'Ann and Bo share 3 films');
+  const bridges = pair({ bridges: Array.from({ length: 21 }, (_, i) => route(a, b, actor(`c${i}`))), people: 1 });
+  assert.equal(describe(bridges).headline, 'Ann and Bo connect through 21 co-stars');
+  assert.equal(describe(bridges).sub, 'Showing 3 connections · Click a co-star or film to explore');
+  assert.equal(describe(pair({ route: { ...route(a, b, actor('x')), actors: [a, actor('x'), actor('y'), b] }, people: 2 })).headline, 'Ann and Bo connect through 2 people in between');
+  assert.equal(describe(pair({}), 0).headline, 'No shared films in Popular films');
+  assert.equal(describe(pair({}), 2).headline, 'No connection within 2 people in between');
+  const three = fixture(3);
+  assert.equal(describeResult(three, 'Popular films', 1, {}, null).headline, 'All 3 pairs are connected');
 });

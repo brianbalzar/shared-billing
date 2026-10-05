@@ -1,4 +1,4 @@
-.pair-controls{position:absolute;top:52px;left:0;padding:0 24px;z-index:7;pointer-events:none}
+.pair-controls{position:absolute;top:92px;left:0;padding:0 24px;z-index:7;pointer-events:none}
 .pair-buttons{display:flex;flex-wrap:wrap;gap:6px;max-height:112px;overflow:auto;padding:4px;pointer-events:auto;scrollbar-width:thin}
 .pair-control{display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--color-border-strong);border-radius:999px;background:var(--color-canvas);font-size:12px;color:var(--color-text-secondary);max-width:100%;text-align:left}
 .pair-control strong{font-weight:500}.pair-control span{color:var(--color-text-muted);white-space:nowrap;font-size:11px}
@@ -25,3 +25,7 @@
 .legend-line{width:18px;height:3px;border-radius:2px}
 .legend-line.direct{background:var(--color-direct)}.legend-line.bridge{background:var(--color-bridge)}.legend-line.route{background:var(--color-route)}
 .has-panel .graph-legend{max-width:calc(100% - 520px)}
+.summary-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px}
+.summary h2{font:700 22px/1.2 var(--font-display);letter-spacing:var(--tracking-display);color:var(--color-text-primary)}
+.summary p{margin:2px 0 0;font:var(--text-meta);color:var(--color-text-secondary)}
+.summary-action{margin-left:0}

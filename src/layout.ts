@@ -10,8 +10,28 @@ export function strongestPair(graph: Graph): string | null {
   const score = (p: Pair) => p.direct ? 100 + p.direct.films.length : p.bridges.length ? routeStrength(p.bridges[0]) + Math.log2(p.bridges.length + 1) : p.route ? 1 / (p.people || 1) : 0;
   return [...graph.pairs].sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))[0]?.id || null;
 }
+const plural = (n: number, one: string, many: string) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+// Headline and subline for the result summary. `visible` is makeGraph's shown-bridge map, so "Showing N" matches the canvas.
+export function describeResult(graph: Graph, setLabel: string, depth: number, visible: Record<string, string[]>, focus: string | null) {
+  const pairs = graph.pairs, connected = pairs.filter(p => p.people !== null);
+  let headline: string;
+  if (pairs.length === 1) {
+    const [p] = pairs, names = `${p.a.name} and ${p.b.name}`;
+    headline = p.direct ? `${names} share ${plural(p.direct.films.length, 'film', 'films')}`
+      : p.bridges.length ? `${names} connect through ${plural(p.bridges.length, 'co-star', 'co-stars')}`
+      : p.route ? `${names} connect through ${plural(p.people!, 'person', 'people')} in between`
+      : depth === 0 ? `No shared films in ${setLabel}` : `No connection within ${plural(depth, 'person', 'people')} in between`;
+  } else headline = !connected.length ? `No connections among these ${graph.actors.length} actors in ${setLabel}` : connected.length === pairs.length ? `All ${pairs.length} pairs are connected` : `${connected.length} of ${pairs.length} pairs are connected`;
+  const showing = pairs.reduce((sum, p) => sum + (p.direct ? 1 : visible[p.id]?.length || (p.route && (graph.actors.length < 4 || p.id === focus) ? 1 : 0)), 0);
+  const direct = pairs.filter(p => p.direct).length, indirect = connected.length - direct;
+  const breakdown = pairs.length > 1 && connected.length ? [direct && `${plural(direct, 'pair shares', 'pairs share')} films`, indirect && `${plural(indirect, 'pair connects', 'pairs connect')} through others`].filter(Boolean) : [];
+  const sub = showing ? [...breakdown, `Showing ${plural(showing, 'connection', 'connections')}`, 'Click a co-star or film to explore'] : ['Try more people in between or a broader film set'];
+  return { headline, sub: sub.join(' · '), showing };
+}
+// Multi-actor anchors start below the result headline and the pair chips.
+const anchorTop = (count: number, h: number) => Math.min(count > 4 ? 300 : 260, h * .36);
 export function corridor(a: { x: number; y: number }, b: { x: number; y: number }, width: number, height: number, count: number, focused: boolean) {
-  const w = Math.max(380, width), h = Math.max(480, height), top = Math.min(count > 4 ? 270 : 230, h * .36);
+  const w = Math.max(380, width), h = Math.max(480, height), top = anchorTop(count, h);
   const cx = w / 2, cy = (top + h - 185) / 2, dx = b.x - a.x, dy = b.y - a.y, distance = Math.hypot(dx, dy) || 1;
   let nx = -dy / distance, ny = dx / distance;
   if (nx * ((a.x + b.x) / 2 - cx) + ny * ((a.y + b.y) / 2 - cy) < 0) { nx = -nx; ny = -ny; }
@@ -80,7 +100,7 @@ export function makeGraph(graph: Graph, shown: number, expanded: Record<string, 
 export function settle(nodes: Node[], edges: Edge[], width: number, height: number, pinned: Record<string, { x: number; y: number }>, focus: string | null = null) {
   const w = Math.max(380, width), h = Math.max(480, height);
   const chosen = nodes.filter(node => node.kind === 'chosen'), n = chosen.length;
-  const top = n > 2 ? Math.min(n > 4 ? 270 : 230, h * .36) : h * .5, bottom = h - 185;
+  const top = n > 2 ? anchorTop(n, h) : h * .5, bottom = h - 185;
   const cx = w / 2, cy = (top + bottom) / 2;
   chosen.forEach((node, i) => {
     // Two-actor anchors slide outward as the canvas narrows (e.g. when the details panel opens),
@@ -121,7 +141,7 @@ export function settle(nodes: Node[], edges: Edge[], width: number, height: numb
   for (const node of nodes) {
     if (node.kind !== 'chosen' && pinned[node.id]) { node.x = pinned[node.id].x * w; node.y = pinned[node.id].y * h; }
     node.x = Math.max(node.radius + 25, Math.min(w - node.radius - 25, node.x));
-    node.y = Math.max(node.radius + (n > 2 ? 135 : 65), Math.min(h - node.radius - 60, node.y));
+    node.y = Math.max(node.radius + (n > 2 ? 175 : 65), Math.min(h - node.radius - 60, node.y));
   }
   return nodes;
 }
