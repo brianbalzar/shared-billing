@@ -13,6 +13,7 @@ self.onmessage = ({ data }) => {
   try {
     if (!engine) return;
     if (data.type === 'search') self.postMessage({ type: 'search', id: data.id, results: engine.search(data.query, data.excluded, data.filmSet) });
+    if (data.type === 'actors') self.postMessage({ type: 'actors', actors: engine.actorsById(data.ids, data.filmSet) });
     if (data.type === 'graph') self.postMessage({ type: 'graph', id: data.id, graph: engine.graph(data.chosen, data.depth, data.filmSet, data.indices) });
   } catch (error) { self.postMessage({ type: 'error', message: error instanceof Error ? error.message : 'Search failed. Please try another pair.' }); }
 };

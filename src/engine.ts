@@ -34,6 +34,11 @@ export class CreditEngine {
     const [id, name, birth, known] = this.data.actors[i];
     return { id, name, birth, known, count: this.counts[i] };
   }
+  // Looks chosen actors up by IMDb ID (for restoring a shared link); unknown IDs are skipped, order is kept.
+  actorsById(ids: string[], set: FilmSet): Actor[] {
+    this.filter(set);
+    return ids.map(id => this.ids.get(id)).filter((i): i is number => i !== undefined).map(i => this.actor(i));
+  }
   randomActors(set: FilmSet): Actor[] {
     this.filter(set);
     const eligible = this.counts.map((count, i) => count > 0 && recommendedActors.has(this.data.actors[i][1]) ? i : -1).filter(i => i >= 0);

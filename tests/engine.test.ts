@@ -47,3 +47,9 @@ test('search balances exact matches against prominence', async () => {
   assert.ok(searchScore('chris evans', 'chris evans', ['chris', 'evans'], 3) > searchScore('christina evansworth', 'chris evans', ['chris', 'evans'], 80));
   assert.ok(searchScore('christopher lee', 'lee', ['lee'], 26) > searchScore('john cleese', 'lee', ['lee'], 44));
 });
+test('actors are restored by ID in order, skipping unknown IDs, with counts for the requested film set', () => {
+  const e = new CreditEngine(fixture);
+  assert.deepEqual(e.actorsById(['nm4', 'nope', 'nm0'], 'popular').map(a => a.name), ['Eve', 'Alice']);
+  assert.equal(e.actorsById(['nm1'], 'popular')[0].count, 0);
+  assert.equal(e.actorsById(['nm1'], 'all')[0].count, 1);
+});

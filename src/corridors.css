@@ -31,3 +31,5 @@
 .summary-action{margin-left:0}
 .data-note{pointer-events:auto;display:block;margin-top:2px;padding:0;font:var(--text-attribution);color:var(--color-text-muted);text-align:left;text-decoration:underline;text-underline-offset:2px}
 .data-note:hover{color:var(--color-text-secondary)}
+
+.copy-link{min-width:116px;justify-content:center}
