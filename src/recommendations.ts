@@ -1,3 +1,4 @@
+import type { ExampleKind, Pair } from './types';
 // A deliberate mix of familiar film stars across generations. Credit count alone
 // would recommend prolific supporting performers rather than recognizable names.
 export const recommendedActors = new Set([
@@ -32,3 +33,18 @@ export const recommendedActors = new Set([
   'Shah Rukh Khan', 'Aamir Khan', 'Amitabh Bachchan', 'Deepika Padukone',
   'Penélope Cruz', 'Javier Bardem', 'Antonio Banderas', 'Salma Hayek',
 ]);
+// Curated starting pairs. Each label is a claim about the Popular films set, so the engine re-checks it
+// against the loaded data (exampleHolds) and the app only offers pairs whose label is still true.
+export const exampleCandidates: { kind: ExampleKind; label: string; depth: number; names: [string, string] }[] = [
+  { kind: 'shared', label: 'Shared films', depth: 1, names: ['Brad Pitt', 'George Clooney'] },
+  { kind: 'unexpected', label: 'Unexpected connection', depth: 1, names: ['Bette Davis', 'Margot Robbie'] },
+  { kind: 'two-steps', label: 'Two steps apart', depth: 2, names: ['Gregory Peck', 'Tom Hanks'] },
+  { kind: 'crowded', label: 'Lots of mutual co-stars', depth: 1, names: ['Samuel L. Jackson', 'Nicole Kidman'] },
+];
+export function exampleHolds(kind: ExampleKind, pair: Pair) {
+  const gap = pair.a.birth && pair.b.birth ? Math.abs(pair.a.birth - pair.b.birth) : 0;
+  if (kind === 'shared') return !!pair.direct && pair.direct.films.length >= 3;
+  if (kind === 'unexpected') return !pair.direct && pair.bridges.length >= 1 && pair.bridges.length <= 3 && gap >= 25;
+  if (kind === 'two-steps') return !pair.direct && !pair.bridges.length && pair.people === 2;
+  return !pair.direct && pair.bridges.length >= 30;
+}

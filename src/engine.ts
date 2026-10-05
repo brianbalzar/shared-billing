@@ -1,5 +1,5 @@
-import type { Actor, Dataset, Evidence, FilmSet, Graph, Pair, Route } from './types';
-import { recommendedActors } from './recommendations';
+import type { Actor, Dataset, Evidence, Example, FilmSet, Graph, Pair, Route } from './types';
+import { recommendedActors, exampleCandidates, exampleHolds } from './recommendations';
 // Balances how well a name matches against how familiar the actor is. Film count is log-scaled so
 // an exact one-film "Tom" no longer outranks Tom Hanks, while a typed full name still wins outright.
 // Matches buried mid-word ("lee" in Cleese) rank below whole-word and word-prefix matches.
@@ -38,6 +38,21 @@ export class CreditEngine {
   actorsById(ids: string[], set: FilmSet): Actor[] {
     this.filter(set);
     return ids.map(id => this.ids.get(id)).filter((i): i is number => i !== undefined).map(i => this.actor(i));
+  }
+  // The best-known actor with this exact name (several people share names like "Chris Evans").
+  actorByName(name: string): Actor | null {
+    let best = -1;
+    this.data.actors.forEach((a, i) => { if (a[1] === name && (best < 0 || this.counts[i] > this.counts[best])) best = i; });
+    return best < 0 ? null : this.actor(best);
+  }
+  // Curated pairs whose label is verified against the loaded data and film set.
+  examples(set: FilmSet): Example[] {
+    this.filter(set);
+    return exampleCandidates.flatMap(c => {
+      const [a, b] = c.names.map(n => this.actorByName(n));
+      if (!a || !b || !a.count || !b.count) return [];
+      return exampleHolds(c.kind, this.graph([a.id, b.id], c.depth, set, {}).pairs[0]) ? [{ kind: c.kind, label: c.label, depth: c.depth, actors: [a, b] as [Actor, Actor] }] : [];
+    });
   }
   randomActors(set: FilmSet): Actor[] {
     this.filter(set);

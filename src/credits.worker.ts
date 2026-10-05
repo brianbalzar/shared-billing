@@ -7,7 +7,7 @@ try {
   const stream = response.body!.pipeThrough(new DecompressionStream('gzip'));
   const data: Dataset = await new Response(stream).json();
   engine = new CreditEngine(data);
-  self.postMessage({ type: 'ready', metadata: data.metadata, actors: engine.randomActors('popular') });
+  self.postMessage({ type: 'ready', metadata: data.metadata, actors: engine.randomActors('popular'), examples: engine.examples('popular') });
 } catch (error) { self.postMessage({ type: 'error', message: error instanceof Error ? error.message : 'Unable to load the movie credits.' }); }
 self.onmessage = ({ data }) => {
   try {
